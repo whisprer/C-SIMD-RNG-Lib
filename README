@@ -107,6 +107,8 @@
 # X.
 # ├── include/                # All public headers
 # │   └── universal\_rng.h    # Main header
+# ├── Benchmarking/           # Benchmarking Results 
+# │                           [compared against C++ std. lib]
 # ├── src/                    # Source code
 # │   ├── simd\_avx2.cpp
 # │   ├── simd\_sse2.cpp

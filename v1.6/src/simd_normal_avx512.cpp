@@ -3,6 +3,7 @@
 #include "rng_common.h"
 #include "simd_exp.h"
 #include <immintrin.h>
+#include <cmath>
 
 namespace ua {
 

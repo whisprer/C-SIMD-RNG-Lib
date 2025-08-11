@@ -1,0 +1,10 @@
+prefix=D:/code/Universal-Architecture-RNG-Lib/v1.6/build/install
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: UniversalRng
+Description: Universal Architecture RNG library (SIMD, RAII, runtime dispatch)
+Version: 1.6.0
+Libs: -L${libdir} -luniversal_rng
+Cflags: -I${includedir}

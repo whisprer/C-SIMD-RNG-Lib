@@ -1,0 +1,318 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <PreferredToolArchitecture>x64</PreferredToolArchitecture>
+  </PropertyGroup>
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="MinSizeRel|x64">
+      <Configuration>MinSizeRel</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="RelWithDebInfo|x64">
+      <Configuration>RelWithDebInfo</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{75177820-DE39-3BBA-A61D-08A6ECFEF88A}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <WindowsTargetPlatformVersion>10.0.26100.0</WindowsTargetPlatformVersion>
+    <Platform>x64</Platform>
+    <ProjectName>universal_rng</ProjectName>
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <PlatformToolset>v143</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.20506.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\code\universal-architecture-rng-lib\v1.6\build\Debug\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">universal_rng.dir\Debug\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">universal_rng</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\code\universal-architecture-rng-lib\v1.6\build\Release\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|x64'">universal_rng.dir\Release\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='Release|x64'">universal_rng</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='Release|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\code\universal-architecture-rng-lib\v1.6\build\MinSizeRel\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">universal_rng.dir\MinSizeRel\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">universal_rng</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">.lib</TargetExt>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\code\universal-architecture-rng-lib\v1.6\build\RelWithDebInfo\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">universal_rng.dir\RelWithDebInfo\</IntDir>
+    <TargetName Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">universal_rng</TargetName>
+    <TargetExt Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">.lib</TargetExt>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\code\Universal-Architecture-RNG-Lib\v1.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <ConformanceMode>true</ConformanceMode>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <InlineFunctionExpansion>Disabled</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <UseFullPaths>false</UseFullPaths>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NOMINMAX;UA_ENABLE_AVX2;UA_ENABLE_AVX2=1;CMAKE_INTDIR="Debug"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_DEBUG;_WINDOWS;NOMINMAX;UA_ENABLE_AVX2;UA_ENABLE_AVX2=1;CMAKE_INTDIR=\"Debug\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\code\Universal-Architecture-RNG-Lib\v1.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\code\Universal-Architecture-RNG-Lib\v1.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\code\Universal-Architecture-RNG-Lib\v1.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <ConformanceMode>true</ConformanceMode>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <UseFullPaths>false</UseFullPaths>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;NOMINMAX;UA_ENABLE_AVX2;UA_ENABLE_AVX2=1;CMAKE_INTDIR="Release"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;NOMINMAX;UA_ENABLE_AVX2;UA_ENABLE_AVX2=1;CMAKE_INTDIR=\"Release\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\code\Universal-Architecture-RNG-Lib\v1.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\code\Universal-Architecture-RNG-Lib\v1.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\code\Universal-Architecture-RNG-Lib\v1.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <ConformanceMode>true</ConformanceMode>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <UseFullPaths>false</UseFullPaths>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;NOMINMAX;UA_ENABLE_AVX2;UA_ENABLE_AVX2=1;CMAKE_INTDIR="MinSizeRel"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <DebugInformationFormat>
+      </DebugInformationFormat>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;NOMINMAX;UA_ENABLE_AVX2;UA_ENABLE_AVX2=1;CMAKE_INTDIR=\"MinSizeRel\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\code\Universal-Architecture-RNG-Lib\v1.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\code\Universal-Architecture-RNG-Lib\v1.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">
+    <ClCompile>
+      <AdditionalIncludeDirectories>D:\code\Universal-Architecture-RNG-Lib\v1.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <ConformanceMode>true</ConformanceMode>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <MinimalRebuild></MinimalRebuild>
+      <Optimization>MaxSpeed</Optimization>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <SupportJustMyCode></SupportJustMyCode>
+      <UseFullPaths>false</UseFullPaths>
+      <UseStandardPreprocessor>true</UseStandardPreprocessor>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;NOMINMAX;UA_ENABLE_AVX2;UA_ENABLE_AVX2=1;CMAKE_INTDIR="RelWithDebInfo"</PreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+    </ClCompile>
+    <ResourceCompile>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions);WIN32;_WINDOWS;NDEBUG;NOMINMAX;UA_ENABLE_AVX2;UA_ENABLE_AVX2=1;CMAKE_INTDIR=\"RelWithDebInfo\"</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>D:\code\Universal-Architecture-RNG-Lib\v1.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ResourceCompile>
+    <Midl>
+      <AdditionalIncludeDirectories>D:\code\Universal-Architecture-RNG-Lib\v1.6\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <OutputDirectory>$(ProjectDir)/$(IntDir)</OutputDirectory>
+      <HeaderFileName>%(Filename).h</HeaderFileName>
+      <TypeLibraryName>%(Filename).tlb</TypeLibraryName>
+      <InterfaceIdentifierFileName>%(Filename)_i.c</InterfaceIdentifierFileName>
+      <ProxyFileName>%(Filename)_p.c</ProxyFileName>
+    </Midl>
+    <Lib>
+      <AdditionalOptions>%(AdditionalOptions) /machine:x64</AdditionalOptions>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <CustomBuild Include="D:\code\Universal-Architecture-RNG-Lib\v1.6\CMakeLists.txt">
+      <UseUtf8Encoding>Always</UseUtf8Encoding>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Building Custom Rule D:/code/Universal-Architecture-RNG-Lib/v1.6/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">setlocal
+C:\msys64\mingw64\bin\cmake.exe -SD:/code/Universal-Architecture-RNG-Lib/v1.6 -BD:/code/universal-architecture-rng-lib/v1.6/build --check-stamp-file D:/code/universal-architecture-rng-lib/v1.6/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">C:\msys64\mingw64\share\cmake\Modules\CMakeCXXCompiler.cmake.in;C:\msys64\mingw64\share\cmake\Modules\CMakeCXXCompilerABI.cpp;C:\msys64\mingw64\share\cmake\Modules\CMakeCXXInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeCommonLanguageInclude.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeCompilerIdDetection.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCXXCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCompilerABI.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCompilerId.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCompilerSupport.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineRCCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineSystem.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeFindBinUtils.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeGenericSystem.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeInitializeConfigs.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeLanguageInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeParseImplicitIncludeInfo.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeParseImplicitLinkInfo.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeParseLibraryArchitecture.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeRCCompiler.cmake.in;C:\msys64\mingw64\share\cmake\Modules\CMakeRCInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeSystem.cmake.in;C:\msys64\mingw64\share\cmake\Modules\CMakeSystemSpecificInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeSystemSpecificInitialize.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeTestCXXCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeTestCompilerCommon.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeTestRCCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\ADSP-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\ARMCC-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\ARMClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\AppleClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Borland-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Clang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Clang-DetermineCompilerInternal.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Compaq-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Cray-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\CrayClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Embarcadero-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Fujitsu-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\FujitsuClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\GHS-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\GNU-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\HP-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\IAR-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\IBMCPP-CXX-DetermineVersionInternal.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\IBMClang-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Intel-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\IntelLLVM-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\LCC-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\MSVC-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\MSVC-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\MSVC.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\NVHPC-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\NVIDIA-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\OpenWatcom-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\OrangeC-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\PGI-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\PathScale-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\SCO-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\SunPro-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\TI-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\TIClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Tasking-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\VisualAge-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Watcom-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\XL-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\XLClang-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\zOS-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CompilerId\VS-10.vcxproj.in;C:\msys64\mingw64\share\cmake\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\Internal\CMakeDetermineLinkerId.cmake;C:\msys64\mingw64\share\cmake\Modules\Internal\CMakeInspectCXXLinker.cmake;C:\msys64\mingw64\share\cmake\Modules\Internal\FeatureTesting.cmake;C:\msys64\mingw64\share\cmake\Modules\Linker\MSVC-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Linker\MSVC.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Linker\Windows-MSVC.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows-Determine-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows-Initialize.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows-MSVC-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows-MSVC.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\WindowsPaths.cmake;D:\code\universal-architecture-rng-lib\v1.6\build\CMakeFiles\4.0.3\CMakeCXXCompiler.cmake;D:\code\universal-architecture-rng-lib\v1.6\build\CMakeFiles\4.0.3\CMakeRCCompiler.cmake;D:\code\universal-architecture-rng-lib\v1.6\build\CMakeFiles\4.0.3\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">D:\code\universal-architecture-rng-lib\v1.6\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Building Custom Rule D:/code/Universal-Architecture-RNG-Lib/v1.6/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='Release|x64'">setlocal
+C:\msys64\mingw64\bin\cmake.exe -SD:/code/Universal-Architecture-RNG-Lib/v1.6 -BD:/code/universal-architecture-rng-lib/v1.6/build --check-stamp-file D:/code/universal-architecture-rng-lib/v1.6/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">C:\msys64\mingw64\share\cmake\Modules\CMakeCXXCompiler.cmake.in;C:\msys64\mingw64\share\cmake\Modules\CMakeCXXCompilerABI.cpp;C:\msys64\mingw64\share\cmake\Modules\CMakeCXXInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeCommonLanguageInclude.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeCompilerIdDetection.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCXXCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCompilerABI.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCompilerId.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCompilerSupport.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineRCCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineSystem.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeFindBinUtils.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeGenericSystem.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeInitializeConfigs.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeLanguageInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeParseImplicitIncludeInfo.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeParseImplicitLinkInfo.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeParseLibraryArchitecture.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeRCCompiler.cmake.in;C:\msys64\mingw64\share\cmake\Modules\CMakeRCInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeSystem.cmake.in;C:\msys64\mingw64\share\cmake\Modules\CMakeSystemSpecificInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeSystemSpecificInitialize.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeTestCXXCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeTestCompilerCommon.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeTestRCCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\ADSP-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\ARMCC-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\ARMClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\AppleClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Borland-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Clang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Clang-DetermineCompilerInternal.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Compaq-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Cray-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\CrayClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Embarcadero-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Fujitsu-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\FujitsuClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\GHS-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\GNU-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\HP-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\IAR-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\IBMCPP-CXX-DetermineVersionInternal.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\IBMClang-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Intel-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\IntelLLVM-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\LCC-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\MSVC-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\MSVC-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\MSVC.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\NVHPC-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\NVIDIA-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\OpenWatcom-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\OrangeC-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\PGI-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\PathScale-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\SCO-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\SunPro-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\TI-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\TIClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Tasking-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\VisualAge-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Watcom-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\XL-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\XLClang-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\zOS-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CompilerId\VS-10.vcxproj.in;C:\msys64\mingw64\share\cmake\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\Internal\CMakeDetermineLinkerId.cmake;C:\msys64\mingw64\share\cmake\Modules\Internal\CMakeInspectCXXLinker.cmake;C:\msys64\mingw64\share\cmake\Modules\Internal\FeatureTesting.cmake;C:\msys64\mingw64\share\cmake\Modules\Linker\MSVC-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Linker\MSVC.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Linker\Windows-MSVC.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows-Determine-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows-Initialize.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows-MSVC-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows-MSVC.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\WindowsPaths.cmake;D:\code\universal-architecture-rng-lib\v1.6\build\CMakeFiles\4.0.3\CMakeCXXCompiler.cmake;D:\code\universal-architecture-rng-lib\v1.6\build\CMakeFiles\4.0.3\CMakeRCCompiler.cmake;D:\code\universal-architecture-rng-lib\v1.6\build\CMakeFiles\4.0.3\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='Release|x64'">D:\code\universal-architecture-rng-lib\v1.6\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='Release|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">Building Custom Rule D:/code/Universal-Architecture-RNG-Lib/v1.6/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">setlocal
+C:\msys64\mingw64\bin\cmake.exe -SD:/code/Universal-Architecture-RNG-Lib/v1.6 -BD:/code/universal-architecture-rng-lib/v1.6/build --check-stamp-file D:/code/universal-architecture-rng-lib/v1.6/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">C:\msys64\mingw64\share\cmake\Modules\CMakeCXXCompiler.cmake.in;C:\msys64\mingw64\share\cmake\Modules\CMakeCXXCompilerABI.cpp;C:\msys64\mingw64\share\cmake\Modules\CMakeCXXInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeCommonLanguageInclude.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeCompilerIdDetection.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCXXCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCompilerABI.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCompilerId.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCompilerSupport.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineRCCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineSystem.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeFindBinUtils.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeGenericSystem.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeInitializeConfigs.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeLanguageInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeParseImplicitIncludeInfo.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeParseImplicitLinkInfo.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeParseLibraryArchitecture.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeRCCompiler.cmake.in;C:\msys64\mingw64\share\cmake\Modules\CMakeRCInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeSystem.cmake.in;C:\msys64\mingw64\share\cmake\Modules\CMakeSystemSpecificInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeSystemSpecificInitialize.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeTestCXXCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeTestCompilerCommon.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeTestRCCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\ADSP-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\ARMCC-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\ARMClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\AppleClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Borland-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Clang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Clang-DetermineCompilerInternal.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Compaq-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Cray-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\CrayClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Embarcadero-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Fujitsu-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\FujitsuClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\GHS-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\GNU-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\HP-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\IAR-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\IBMCPP-CXX-DetermineVersionInternal.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\IBMClang-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Intel-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\IntelLLVM-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\LCC-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\MSVC-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\MSVC-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\MSVC.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\NVHPC-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\NVIDIA-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\OpenWatcom-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\OrangeC-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\PGI-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\PathScale-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\SCO-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\SunPro-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\TI-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\TIClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Tasking-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\VisualAge-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Watcom-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\XL-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\XLClang-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\zOS-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CompilerId\VS-10.vcxproj.in;C:\msys64\mingw64\share\cmake\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\Internal\CMakeDetermineLinkerId.cmake;C:\msys64\mingw64\share\cmake\Modules\Internal\CMakeInspectCXXLinker.cmake;C:\msys64\mingw64\share\cmake\Modules\Internal\FeatureTesting.cmake;C:\msys64\mingw64\share\cmake\Modules\Linker\MSVC-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Linker\MSVC.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Linker\Windows-MSVC.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows-Determine-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows-Initialize.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows-MSVC-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows-MSVC.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\WindowsPaths.cmake;D:\code\universal-architecture-rng-lib\v1.6\build\CMakeFiles\4.0.3\CMakeCXXCompiler.cmake;D:\code\universal-architecture-rng-lib\v1.6\build\CMakeFiles\4.0.3\CMakeRCCompiler.cmake;D:\code\universal-architecture-rng-lib\v1.6\build\CMakeFiles\4.0.3\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">D:\code\universal-architecture-rng-lib\v1.6\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='MinSizeRel|x64'">false</LinkObjects>
+      <Message Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">Building Custom Rule D:/code/Universal-Architecture-RNG-Lib/v1.6/CMakeLists.txt</Message>
+      <Command Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">setlocal
+C:\msys64\mingw64\bin\cmake.exe -SD:/code/Universal-Architecture-RNG-Lib/v1.6 -BD:/code/universal-architecture-rng-lib/v1.6/build --check-stamp-file D:/code/universal-architecture-rng-lib/v1.6/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal &amp; call :cmErrorLevel %errorlevel% &amp; goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd</Command>
+      <AdditionalInputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">C:\msys64\mingw64\share\cmake\Modules\CMakeCXXCompiler.cmake.in;C:\msys64\mingw64\share\cmake\Modules\CMakeCXXCompilerABI.cpp;C:\msys64\mingw64\share\cmake\Modules\CMakeCXXInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeCommonLanguageInclude.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeCompilerIdDetection.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCXXCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCompilerABI.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCompilerId.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineCompilerSupport.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineRCCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeDetermineSystem.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeFindBinUtils.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeGenericSystem.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeInitializeConfigs.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeLanguageInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeParseImplicitIncludeInfo.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeParseImplicitLinkInfo.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeParseLibraryArchitecture.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeRCCompiler.cmake.in;C:\msys64\mingw64\share\cmake\Modules\CMakeRCInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeSystem.cmake.in;C:\msys64\mingw64\share\cmake\Modules\CMakeSystemSpecificInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeSystemSpecificInitialize.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeTestCXXCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeTestCompilerCommon.cmake;C:\msys64\mingw64\share\cmake\Modules\CMakeTestRCCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\ADSP-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\ARMCC-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\ARMClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\AppleClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Borland-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\CMakeCommonCompilerMacros.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Clang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Clang-DetermineCompilerInternal.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Compaq-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Cray-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\CrayClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Embarcadero-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Fujitsu-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\FujitsuClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\GHS-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\GNU-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\HP-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\IAR-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\IBMCPP-CXX-DetermineVersionInternal.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\IBMClang-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Intel-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\IntelLLVM-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\LCC-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\MSVC-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\MSVC-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\MSVC.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\NVHPC-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\NVIDIA-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\OpenWatcom-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\OrangeC-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\PGI-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\PathScale-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\SCO-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\SunPro-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\TI-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\TIClang-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Tasking-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\VisualAge-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\Watcom-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\XL-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\XLClang-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\Compiler\zOS-CXX-DetermineCompiler.cmake;C:\msys64\mingw64\share\cmake\Modules\CompilerId\VS-10.vcxproj.in;C:\msys64\mingw64\share\cmake\Modules\Internal\CMakeCXXLinkerInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\Internal\CMakeCommonLinkerInformation.cmake;C:\msys64\mingw64\share\cmake\Modules\Internal\CMakeDetermineLinkerId.cmake;C:\msys64\mingw64\share\cmake\Modules\Internal\CMakeInspectCXXLinker.cmake;C:\msys64\mingw64\share\cmake\Modules\Internal\FeatureTesting.cmake;C:\msys64\mingw64\share\cmake\Modules\Linker\MSVC-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Linker\MSVC.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Linker\Windows-MSVC-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Linker\Windows-MSVC.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows-Determine-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows-Initialize.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows-MSVC-CXX.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows-MSVC.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\Windows.cmake;C:\msys64\mingw64\share\cmake\Modules\Platform\WindowsPaths.cmake;D:\code\universal-architecture-rng-lib\v1.6\build\CMakeFiles\4.0.3\CMakeCXXCompiler.cmake;D:\code\universal-architecture-rng-lib\v1.6\build\CMakeFiles\4.0.3\CMakeRCCompiler.cmake;D:\code\universal-architecture-rng-lib\v1.6\build\CMakeFiles\4.0.3\CMakeSystem.cmake;%(AdditionalInputs)</AdditionalInputs>
+      <Outputs Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">D:\code\universal-architecture-rng-lib\v1.6\build\CMakeFiles\generate.stamp</Outputs>
+      <LinkObjects Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">false</LinkObjects>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="D:\code\Universal-Architecture-RNG-Lib\v1.6\src\universal_rng.cpp" />
+    <ClCompile Include="D:\code\Universal-Architecture-RNG-Lib\v1.6\src\runtime_detect.cpp" />
+    <ClCompile Include="D:\code\Universal-Architecture-RNG-Lib\v1.6\src\rng_distributions.cpp" />
+    <ClCompile Include="D:\code\Universal-Architecture-RNG-Lib\v1.6\src\simd_normal_avx2.cpp" />
+    <ClCompile Include="D:\code\Universal-Architecture-RNG-Lib\v1.6\src\simd_normal_avx512.cpp" />
+    <ClCompile Include="D:\code\Universal-Architecture-RNG-Lib\v1.6\src\simd_normal_neon.cpp" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="D:\code\universal-architecture-rng-lib\v1.6\build\ZERO_CHECK.vcxproj">
+      <Project>{237D490A-BB0B-3290-A770-E774D570F168}</Project>
+      <Name>ZERO_CHECK</Name>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

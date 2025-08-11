@@ -1,327 +1,329 @@
+// src/universal_rng.cpp
 #include "universal_rng.h"
-#include "runtime_detect.h"
+#include "rng_common.h"
 #include "rng_distributions.h"
+#include "runtime_detect.h"
 #include "simd_normal.h"
-#include <atomic>
-#include <mutex>
+#include <cstdint>
+#include <cstdlib>
 #include <cstring>
+#include <new>
+#include <type_traits>
+#include <memory>
+#include <algorithm>
 
-namespace ua {
-struct Xoshiro256ssScalar;
+// --------- Pull backend class definitions into this TU (MSVC needs complete types) ----------
+#include "xoshiro256ss_scalar.cpp"
 #if defined(UA_ENABLE_AVX2)
-struct Xoshiro256ssAVX2;
-struct Philox4x32_10_AVX2;
+  #include "simd_avx2_xoshiro256ss.cpp"
+  #include "simd_avx2_philox4x32.cpp"
 #endif
 #if defined(UA_ENABLE_AVX512)
-struct Xoshiro256ssAVX512;
-struct Philox4x32_10_AVX512;
+  #include "simd_avx512_xoshiro256ss.cpp"
+  #include "simd_avx512_philox4x32.cpp"
 #endif
-struct Philox4x32_10_Scalar;
+#include "philox4x32_scalar.cpp"
 #if defined(__aarch64__) || defined(__ARM_NEON)
-struct Philox4x32_10_NEON;
+  #include "simd_neon_philox4x32.cpp"
 #endif
-}
+// -------------------------------------------------------------------------------------------
 
 namespace ua {
+
+#if defined(UA_ENABLE_AVX2)
+using Xoshiro256ssAVX2_t   = Xoshiro256ssAVX2;
+#endif
+#if defined(UA_ENABLE_AVX512)
+using Xoshiro256ssAVX512_t = Xoshiro256ssAVX512;
+#endif
+using Xoshiro256ssScalar_t = Xoshiro256ssScalar;
+
+using PhiloxScalar_t  = Philox4x32_10_Scalar;
+#if defined(UA_ENABLE_AVX2)
+using PhiloxAVX2_t    = Philox4x32_10_AVX2;
+#endif
+#if defined(UA_ENABLE_AVX512)
+using PhiloxAVX512_t  = Philox4x32_10_AVX512;
+#endif
+
+// ------------------------------- GeneratorContext ---------------------------------
 
 class GeneratorContext {
 public:
   explicit GeneratorContext(const Init& init)
-  : algo_(init.algo), simd_(detect_simd()), buffer_cap_(init.buffer.capacity_u64) {
-    if (buffer_cap_ == 0) buffer_cap_ = 1024;
-    buffer_.resize(buffer_cap_);
-    seed_ = init.seed;
-    stream_ = init.stream;
-    ZigguratNormal::ensure_init();
+  : algo_(init.algo),
+    seed_(init.seed),
+    stream_(init.stream),
+    simd_(detect_simd_tier()),
+    buf_cap_(init.buffer.capacity_u64 ? init.buffer.capacity_u64 : std::size_t(8192)),
+    buf_(nullptr), buf_size_(0), buf_pos_(0)
+  {
+    // Optional env override for testing: UA_FORCE_SIMD=avx2|avx512|neon|scalar
+#if defined(_WIN32)
+    char* force = nullptr; size_t len = 0;
+    if (_dupenv_s(&force, &len, "UA_FORCE_SIMD") == 0 && force && len) {
+      std::unique_ptr<char, void(*)(void*)> g(force, [](void* p){ std::free(p); });
+      if (_stricmp(force, "avx512") == 0) simd_ = SimdTier::AVX512;
+      else if (_stricmp(force, "avx2") == 0) simd_ = SimdTier::AVX2;
+      else if (_stricmp(force, "neon") == 0) simd_ = SimdTier::NEON;
+      else if (_stricmp(force, "scalar") == 0) simd_ = SimdTier::Scalar;
+    }
+#else
+    if (const char* force = std::getenv("UA_FORCE_SIMD")) {
+      auto ieq = [](char a, char b){ return std::tolower(a)==std::tolower(b); };
+      if (std::strlen(force)==6 && ieq(force[0],'a')&&ieq(force[1],'v')&&ieq(force[2],'x')&&ieq(force[3],'5')&&ieq(force[4],'1')&&ieq(force[5],'2'))
+        simd_ = SimdTier::AVX512;
+      else if (std::strlen(force)==4 && ieq(force[0],'a')&&ieq(force[1],'v')&&ieq(force[2],'x')&&ieq(force[3],'2'))
+        simd_ = SimdTier::AVX2;
+      else if (!strcasecmp(force,"neon"))   simd_ = SimdTier::NEON;
+      else if (!strcasecmp(force,"scalar")) simd_ = SimdTier::Scalar;
+    }
+#endif
+
+    buf_ = static_cast<std::uint64_t*>(::operator new[](buf_cap_ * sizeof(std::uint64_t), std::align_val_t(64)));
+
     construct_backend();
-    refill();
-  }
-  ~GeneratorContext() { destroy_backend(); }
-
-  void skip_ahead_blocks(std::uint64_t nblocks) {
-    skip_backend(nblocks);
-    idx_ = size_ = 0; // invalidate buffer (conservative correctness)
+    refill_buffer();
   }
 
-  std::uint64_t next_u64() { if (idx_ >= size_) refill(); return buffer_[idx_++]; }
-  double        next_double(){ return u64_to_unit_double(next_u64()); }
-
-  void set_capacity(std::size_t cap) {
-    if (cap == 0) cap = 1024;
-    buffer_cap_ = cap;
-    buffer_.assign(buffer_cap_, 0);
-    idx_ = size_ = 0;
-    refill();
+  ~GeneratorContext() {
+    destroy_backend();
+    if (buf_) { ::operator delete[](buf_, std::align_val_t(64)); buf_ = nullptr; }
   }
 
-  void generate_u64(std::uint64_t* dst, std::size_t n) {
+  SimdTier  simd() const noexcept { return simd_; }
+  Algorithm algo() const noexcept { return algo_; }
+
+  // produce u64s
+  void generate_u64(std::uint64_t* out, std::size_t n) {
     while (n) {
-      if (idx_ < size_) {
-        std::size_t take = size_ - idx_;
-        if (take > n) take = n;
-        std::memcpy(dst, buffer_.data() + idx_, take * sizeof(std::uint64_t));
-        idx_ += take; dst += take; n -= take;
-      } else {
-        if (n >= buffer_cap_) { backend_fill(dst, buffer_cap_); dst += buffer_cap_; n -= buffer_cap_; }
-        else refill();
-      }
+      if (buf_pos_ == buf_size_) refill_buffer();
+      std::size_t take = (std::min)(n, buf_size_ - buf_pos_);
+      std::memcpy(out, buf_ + buf_pos_, take * sizeof(std::uint64_t));
+      out += take; n -= take; buf_pos_ += take;
     }
   }
 
-  void generate_double(double* dst, std::size_t n) {
-    const std::size_t tmpN = 1024;
-    std::uint64_t tmp[tmpN];
+  // produce doubles in [0,1)
+  void generate_double(double* out, std::size_t n) {
+    const std::size_t chunk = 4096;
+    std::uint64_t tmp[chunk];
     while (n) {
-      std::size_t take = (n > tmpN) ? tmpN : n;
+      std::size_t take = (std::min)(n, chunk);
       generate_u64(tmp, take);
-      for (std::size_t i = 0; i < take; ++i) dst[i] = u64_to_unit_double(tmp[i]);
-      dst += take; n -= take;
+      for (std::size_t i=0;i<take;++i) out[i] = u64_to_unit_double(tmp[i]);
+      out += take; n -= take;
     }
   }
 
-  void generate_normal(double mean, double stddev, double* dst, std::size_t n) {
+  // produce N( mean, stddev )
+  void generate_normal(double mean, double stddev, double* out, std::size_t n) {
     if (n == 0) return;
-    const std::size_t B = 8192;
 
 #if defined(UA_ENABLE_AVX512)
     if (simd_ == SimdTier::AVX512) {
-      std::vector<std::uint64_t> u(B), v(B);
-      std::size_t left = n;
-      while (left) {
-        std::size_t take = left > B ? B : left;
-        generate_u64(u.data(), take);
-        generate_u64(v.data(), take);
-        simd_normal_avx512(u.data(), v.data(), take, mean, stddev, dst);
-        dst += take; left -= take;
+      const std::size_t lanes = 8;
+      std::uint64_t u[lanes], v[lanes];
+      std::size_t i = 0;
+      for (; i + lanes <= n; i += lanes) {
+        generate_u64(u, lanes);
+        generate_u64(v, lanes);
+        simd_normal_avx512(u, v, lanes, mean, stddev, out + i);
+      }
+      for (; i < n; ++i) {
+        std::uint64_t uu, vv;
+        generate_u64(&uu, 1);
+        generate_u64(&vv, 1);
+        double u01 = u64_to_unit_double(uu);
+        double v01 = u64_to_unit_double(vv);
+        out[i] = mean + stddev * ZigguratNormal::sample(uu, u01, v01);
       }
       return;
     }
 #endif
 #if defined(UA_ENABLE_AVX2)
     if (simd_ == SimdTier::AVX2) {
-      std::vector<std::uint64_t> u(B), v(B);
-      std::size_t left = n;
-      while (left) {
-        std::size_t take = left > B ? B : left;
-        generate_u64(u.data(), take);
-        generate_u64(v.data(), take);
-        simd_normal_avx2(u.data(), v.data(), take, mean, stddev, dst);
-        dst += take; left -= take;
+      const std::size_t lanes = 4;
+      std::uint64_t u[lanes], v[lanes];
+      std::size_t i = 0;
+      for (; i + lanes <= n; i += lanes) {
+        generate_u64(u, lanes);
+        generate_u64(v, lanes);
+        simd_normal_avx2(u, v, lanes, mean, stddev, out + i);
+      }
+      for (; i < n; ++i) {
+        std::uint64_t uu, vv;
+        generate_u64(&uu, 1);
+        generate_u64(&vv, 1);
+        double u01 = u64_to_unit_double(uu);
+        double v01 = u64_to_unit_double(vv);
+        out[i] = mean + stddev * ZigguratNormal::sample(uu, u01, v01);
       }
       return;
     }
 #endif
 #if defined(__aarch64__) || defined(__ARM_NEON)
-    {
-      std::vector<std::uint64_t> u(B), v(B);
-      std::size_t left = n;
-      while (left) {
-        std::size_t take = left > B ? B : left;
-        generate_u64(u.data(), take);
-        generate_u64(v.data(), take);
-        simd_normal_neon(u.data(), v.data(), take, mean, stddev, dst);
-        dst += take; left -= take;
+    if (simd_ == SimdTier::NEON) {
+      const std::size_t lanes = 4;
+      std::uint64_t u[lanes], v[lanes];
+      std::size_t i = 0;
+      for (; i + lanes <= n; i += lanes) {
+        generate_u64(u, lanes);
+        generate_u64(v, lanes);
+        simd_normal_neon(u, v, lanes, mean, stddev, out + i);
+      }
+      for (; i < n; ++i) {
+        std::uint64_t uu, vv;
+        generate_u64(&uu, 1);
+        generate_u64(&vv, 1);
+        double u01 = u64_to_unit_double(uu);
+        double v01 = u64_to_unit_double(vv);
+        out[i] = mean + stddev * ZigguratNormal::sample(uu, u01, v01);
       }
       return;
     }
 #endif
     // scalar fallback
-    const std::size_t tmpN = 1024;
-    std::uint64_t u[tmpN], v[tmpN];
-    while (n) {
-      std::size_t take = (n > tmpN) ? tmpN : n;
-      generate_u64(u, take);
-      generate_u64(v, take);
-      for (std::size_t i = 0; i < take; ++i) {
-        double u01 = u64_to_unit_double(u[i]);
-        double extra = u64_to_unit_double(v[i]);
-        double z = ZigguratNormal::sample(u[i], u01, extra);
-        dst[i] = mean + stddev * z;
-      }
-      dst += take; n -= take;
+    for (std::size_t i=0; i<n; ++i) {
+      std::uint64_t uu, vv;
+      generate_u64(&uu, 1);
+      generate_u64(&vv, 1);
+      double u01 = u64_to_unit_double(uu);
+      double v01 = u64_to_unit_double(vv);
+      out[i] = mean + stddev * ZigguratNormal::sample(uu, u01, v01);
     }
   }
 
 private:
-  Algorithm   algo_;
-  SimdTier    simd_;
-  std::uint64_t seed_{}, stream_{};
-  std::vector<std::uint64_t> buffer_;
-  std::size_t buffer_cap_{1024};
-  std::size_t idx_{0}, size_{0};
+  using fill_fn_t = void(*)(void* self, std::uint64_t* dst, std::size_t n);
 
-  alignas(64) unsigned char backend_mem_[256];
-  enum class BackendTag : unsigned char {
-    None, Scalar, AVX2, AVX512, PhiloxScalar, PhiloxAVX2, PhiloxAVX512, PhiloxNEON
-  } tag_{BackendTag::None};
+  template <typename T>
+  static void fill_trampoline(void* self, std::uint64_t* dst, std::size_t n) {
+    static_cast<T*>(self)->fill_u64(dst, n);
+  }
 
-  void construct_backend();
-  void destroy_backend() noexcept;
-  void backend_fill(std::uint64_t* dst, std::size_t n);
-  void skip_backend(std::uint64_t nblocks);
+  void construct_backend() {
+    switch (algo_) {
+      case Algorithm::Xoshiro256ss:
+      {
+#if defined(UA_ENABLE_AVX512)
+        if (simd_ == SimdTier::AVX512) {
+          backend_object_ = ::operator new(sizeof(Xoshiro256ssAVX512_t), std::align_val_t(64));
+          new (backend_object_) Xoshiro256ssAVX512_t(seed_, stream_);
+          fill_ = &fill_trampoline<Xoshiro256ssAVX512_t>;
+          return;
+        }
+#endif
+#if defined(UA_ENABLE_AVX2)
+        if (simd_ == SimdTier::AVX2) {
+          backend_object_ = ::operator new(sizeof(Xoshiro256ssAVX2_t), std::align_val_t(64));
+          new (backend_object_) Xoshiro256ssAVX2_t(seed_, stream_);
+          fill_ = &fill_trampoline<Xoshiro256ssAVX2_t>;
+          return;
+        }
+#endif
+        backend_object_ = ::operator new(sizeof(Xoshiro256ssScalar_t), std::align_val_t(64));
+        new (backend_object_) Xoshiro256ssScalar_t(seed_, stream_);
+        fill_ = &fill_trampoline<Xoshiro256ssScalar_t>;
+        return;
+      }
 
-  void refill() { backend_fill(buffer_.data(), buffer_cap_); idx_ = 0; size_ = buffer_cap_; }
+      case Algorithm::Philox4x32_10:
+      {
+#if defined(UA_ENABLE_AVX512)
+        if (simd_ == SimdTier::AVX512) {
+          backend_object_ = ::operator new(sizeof(PhiloxAVX512_t), std::align_val_t(64));
+          new (backend_object_) PhiloxAVX512_t(seed_, stream_);
+          fill_ = &fill_trampoline<PhiloxAVX512_t>;
+          return;
+        }
+#endif
+#if defined(UA_ENABLE_AVX2)
+        if (simd_ == SimdTier::AVX2) {
+          backend_object_ = ::operator new(sizeof(PhiloxAVX2_t), std::align_val_t(64));
+          new (backend_object_) PhiloxAVX2_t(seed_, stream_);
+          fill_ = &fill_trampoline<PhiloxAVX2_t>;
+          return;
+        }
+#endif
+        backend_object_ = ::operator new(sizeof(PhiloxScalar_t), std::align_val_t(64));
+        new (backend_object_) PhiloxScalar_t(seed_, stream_);
+        fill_ = &fill_trampoline<PhiloxScalar_t>;
+        return;
+      }
+    }
+  }
+
+  void destroy_backend() noexcept {
+    if (!backend_object_) return;
+    switch (algo_) {
+      case Algorithm::Xoshiro256ss:
+      {
+#if defined(UA_ENABLE_AVX512)
+        if (simd_ == SimdTier::AVX512) { static_cast<Xoshiro256ssAVX512_t*>(backend_object_)->~Xoshiro256ssAVX512_t(); break; }
+#endif
+#if defined(UA_ENABLE_AVX2)
+        if (simd_ == SimdTier::AVX2)   { static_cast<Xoshiro256ssAVX2_t*>(backend_object_)->~Xoshiro256ssAVX2_t();     break; }
+#endif
+        static_cast<Xoshiro256ssScalar_t*>(backend_object_)->~Xoshiro256ssScalar_t();
+        break;
+      }
+      case Algorithm::Philox4x32_10:
+      {
+#if defined(UA_ENABLE_AVX512)
+        if (simd_ == SimdTier::AVX512) { static_cast<PhiloxAVX512_t*>(backend_object_)->~PhiloxAVX512_t(); break; }
+#endif
+#if defined(UA_ENABLE_AVX2)
+        if (simd_ == SimdTier::AVX2)   { static_cast<PhiloxAVX2_t*>(backend_object_)->~PhiloxAVX2_t();     break; }
+#endif
+        static_cast<PhiloxScalar_t*>(backend_object_)->~PhiloxScalar_t();
+        break;
+      }
+    }
+    ::operator delete(backend_object_, std::align_val_t(64));
+    backend_object_ = nullptr;
+  }
+
+  void refill_buffer() {
+    fill_(backend_object_, buf_, buf_cap_);
+    buf_size_ = buf_cap_;
+    buf_pos_  = 0;
+  }
+
+private:
+  Algorithm      algo_;
+  std::uint64_t  seed_;
+  std::uint64_t  stream_;
+  SimdTier       simd_;
+
+  std::size_t    buf_cap_;
+  std::uint64_t* buf_;
+  std::size_t    buf_size_;
+  std::size_t    buf_pos_;
+
+  void*          backend_object_ = nullptr;
+  fill_fn_t      fill_ = nullptr;
 };
 
-void GeneratorContext::construct_backend() {
-  switch (algo_) {
-    case Algorithm::Xoshiro256ss: {
-      if (simd_ == SimdTier::AVX512) {
-#if defined(UA_ENABLE_AVX512)
-        new (backend_mem_) Xoshiro256ssAVX512(seed_, stream_);
-        tag_ = BackendTag::AVX512; break;
-#endif
-      }
-      if (simd_ == SimdTier::AVX2) {
-#if defined(UA_ENABLE_AVX2)
-        new (backend_mem_) Xoshiro256ssAVX2(seed_, stream_);
-        tag_ = BackendTag::AVX2; break;
-#endif
-      }
-      new (backend_mem_) Xoshiro256ssScalar(seed_, stream_);
-      tag_ = BackendTag::Scalar;
-    } break;
+// ------------------------------- UniversalRng API --------------------------------
 
-    case Algorithm::Philox4x32_10: {
-#if defined(UA_ENABLE_AVX512)
-      if (simd_ == SimdTier::AVX512) { new (backend_mem_) Philox4x32_10_AVX512(seed_, stream_); tag_ = BackendTag::PhiloxAVX512; break; }
-#endif
-#if defined(UA_ENABLE_AVX2)
-      if (simd_ == SimdTier::AVX2)   { new (backend_mem_) Philox4x32_10_AVX2(seed_, stream_);   tag_ = BackendTag::PhiloxAVX2; break; }
-#endif
-#if defined(__aarch64__) || defined(__ARM_NEON)
-      { new (backend_mem_) Philox4x32_10_NEON(seed_, stream_); tag_ = BackendTag::PhiloxNEON; break; }
-#endif
-      new (backend_mem_) Philox4x32_10_Scalar(seed_, stream_);
-      tag_ = BackendTag::PhiloxScalar;
-    } break;
-  }
-}
+UniversalRng::UniversalRng(const Init& init)
+  : ctx_(std::make_unique<GeneratorContext>(init)) {}
 
-void GeneratorContext::destroy_backend() noexcept {
-  switch (tag_) {
-    case BackendTag::Scalar:
-      reinterpret_cast<Xoshiro256ssScalar*>(backend_mem_)->~Xoshiro256ssScalar(); break;
-#if defined(UA_ENABLE_AVX2)
-    case BackendTag::AVX2:
-      reinterpret_cast<Xoshiro256ssAVX2*>(backend_mem_)->~Xoshiro256ssAVX2(); break;
-    case BackendTag::PhiloxAVX2:
-      reinterpret_cast<Philox4x32_10_AVX2*>(backend_mem_)->~Philox4x32_10_AVX2(); break;
-#endif
-#if defined(UA_ENABLE_AVX512)
-    case BackendTag::AVX512:
-      reinterpret_cast<Xoshiro256ssAVX512*>(backend_mem_)->~Xoshiro256ssAVX512(); break;
-    case BackendTag::PhiloxAVX512:
-      reinterpret_cast<Philox4x32_10_AVX512*>(backend_mem_)->~Philox4x32_10_AVX512(); break;
-#endif
-#if defined(__aarch64__) || defined(__ARM_NEON)
-    case BackendTag::PhiloxNEON:
-      reinterpret_cast<Philox4x32_10_NEON*>(backend_mem_)->~Philox4x32_10_NEON(); break;
-#endif
-    case BackendTag::PhiloxScalar:
-      reinterpret_cast<Philox4x32_10_Scalar*>(backend_mem_)->~Philox4x32_10_Scalar(); break;
-    default: break;
-  }
-  tag_ = BackendTag::None;
-}
-
-void GeneratorContext::backend_fill(std::uint64_t* dst, std::size_t n) {
-  switch (tag_) {
-    case BackendTag::Scalar:
-      reinterpret_cast<Xoshiro256ssScalar*>(backend_mem_)->fill_u64(dst, n); break;
-#if defined(UA_ENABLE_AVX2)
-    case BackendTag::AVX2:
-      reinterpret_cast<Xoshiro256ssAVX2*>(backend_mem_)->fill_u64(dst, n); break;
-    case BackendTag::PhiloxAVX2:
-      reinterpret_cast<Philox4x32_10_AVX2*>(backend_mem_)->fill_u64(dst, n); break;
-#endif
-#if defined(UA_ENABLE_AVX512)
-    case BackendTag::AVX512:
-      reinterpret_cast<Xoshiro256ssAVX512*>(backend_mem_)->fill_u64(dst, n); break;
-    case BackendTag::PhiloxAVX512:
-      reinterpret_cast<Philox4x32_10_AVX512*>(backend_mem_)->fill_u64(dst, n); break;
-#endif
-#if defined(__aarch64__) || defined(__ARM_NEON)
-    case BackendTag::PhiloxNEON:
-      reinterpret_cast<Philox4x32_10_NEON*>(backend_mem_)->fill_u64(dst, n); break;
-#endif
-    case BackendTag::PhiloxScalar:
-      reinterpret_cast<Philox4x32_10_Scalar*>(backend_mem_)->fill_u64(dst, n); break;
-    default:
-      reinterpret_cast<Xoshiro256ssScalar*>(backend_mem_)->fill_u64(dst, n); break;
-  }
-}
-
-void GeneratorContext::skip_backend(std::uint64_t nblocks) {
-  switch (tag_) {
-    case BackendTag::PhiloxScalar:
-      reinterpret_cast<Philox4x32_10_Scalar*>(backend_mem_)->skip_ahead_blocks(nblocks); break;
-#if defined(UA_ENABLE_AVX2)
-    case BackendTag::PhiloxAVX2:
-      reinterpret_cast<Philox4x32_10_AVX2*>(backend_mem_)->skip_ahead_blocks(nblocks); break;
-#endif
-#if defined(UA_ENABLE_AVX512)
-    case BackendTag::PhiloxAVX512:
-      reinterpret_cast<Philox4x32_10_AVX512*>(backend_mem_)->skip_ahead_blocks(nblocks); break;
-#endif
-#if defined(__aarch64__) || defined(__ARM_NEON)
-    case BackendTag::PhiloxNEON:
-      reinterpret_cast<Philox4x32_10_NEON*>(backend_mem_)->skip_ahead_blocks(nblocks); break;
-#endif
-    default:
-      // xoshiro fallback: generate/discard 2*nblocks u64s to advance roughly same amount
-      if (nblocks) {
-        std::uint64_t sink;
-        const std::uint64_t toss = 2ULL * nblocks;
-        for (std::uint64_t i=0;i<toss;++i) (void)next_u64();
-      }
-  }
-}
-
-// thread-local facade
-
-static thread_local GeneratorContext* tls_ctx = nullptr;
-static std::once_flag init_once_guard;
-
-static void init_default_once() {
-  if (!tls_ctx) { Init def{}; tls_ctx = new GeneratorContext(def); }
-}
-
-void rng_init(const Init& init) {
-  if (tls_ctx) { delete tls_ctx; tls_ctx = nullptr; }
-  tls_ctx = new GeneratorContext(init);
-}
-
-void rng_set_buffer_capacity(std::size_t capacity_u64) {
-  std::call_once(init_once_guard, &init_default_once);
-  tls_ctx->set_capacity(capacity_u64);
-}
-
-void rng_skip_ahead_blocks(std::uint64_t nblocks) {
-  std::call_once(init_once_guard, &init_default_once);
-  tls_ctx->skip_ahead_blocks(nblocks);
-}
-
-std::uint64_t rng_next_u64() { std::call_once(init_once_guard, &init_default_once); return tls_ctx->next_u64(); }
-double        rng_next_double(){ std::call_once(init_once_guard, &init_default_once); return tls_ctx->next_double(); }
-void          rng_generate_u64(std::uint64_t* d,std::size_t n){ std::call_once(init_once_guard,&init_default_once); tls_ctx->generate_u64(d,n); }
-void          rng_generate_double(double* d,std::size_t n){ std::call_once(init_once_guard,&init_default_once); tls_ctx->generate_double(d,n); }
-void          rng_generate_normal(double mean, double stddev, double* d, std::size_t n) {
-  std::call_once(init_once_guard, &init_default_once);
-  tls_ctx->generate_normal(mean, stddev, d, n);
-}
-
-// RAII
-
-struct UniversalRng::Impl { GeneratorContext ctx; explicit Impl(const Init& i):ctx(i){} };
-UniversalRng::UniversalRng(const Init& i):p_(std::make_unique<Impl>(i)){}
 UniversalRng::~UniversalRng() = default;
 
-void UniversalRng::skip_ahead_blocks(std::uint64_t n){ p_->ctx.skip_ahead_blocks(n); }
-std::uint64_t UniversalRng::next_u64(){ return p_->ctx.next_u64(); }
-double        UniversalRng::next_double(){ return p_->ctx.next_double(); }
-void          UniversalRng::generate_u64(std::uint64_t* d,std::size_t n){ p_->ctx.generate_u64(d,n); }
-void          UniversalRng::generate_double(double* d,std::size_t n){ p_->ctx.generate_double(d,n); }
-void          UniversalRng::generate_normal(double mean, double stddev, double* d, std::size_t n){ p_->ctx.generate_normal(mean,stddev,d,n); }
+void UniversalRng::generate_u64(std::uint64_t* out, std::size_t n) {
+  ctx_->generate_u64(out, n);
+}
+
+void UniversalRng::generate_double(double* out, std::size_t n) {
+  ctx_->generate_double(out, n);
+}
+
+void UniversalRng::generate_normal(double mean, double stddev, double* out, std::size_t n) {
+  ctx_->generate_normal(mean, stddev, out, n);
+}
+
+SimdTier UniversalRng::simd_tier() const noexcept { return ctx_->simd(); }
 
 } // namespace ua

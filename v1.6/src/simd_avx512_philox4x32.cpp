@@ -1,3 +1,4 @@
+// src/simd_avx512_philox4x32.cpp
 #include <cstddef>
 #include <cstdint>
 #include <immintrin.h>
@@ -7,15 +8,27 @@ namespace ua {
 
 #if defined(UA_ENABLE_AVX512)
 
-static constexpr std::uint32_t PHILOX_M0 = 0xD2511F53u;
-static constexpr std::uint32_t PHILOX_M1 = 0xCD9E8D57u;
-static constexpr std::uint32_t PHILOX_W0 = 0x9E3779B9u;
-static constexpr std::uint32_t PHILOX_W1 = 0xBB67AE85u;
-
 static inline __m512i ua_mullo32(__m512i a, __m512i b) { return _mm512_mullo_epi32(a, b); }
-static inline __m512i ua_mulhi32(__m512i a, __m512i b) { return _mm512_mulhi_epu32(a, b); }
+
+// Synthesize high 32 bits for all 16 lanes
+static inline __m512i ua_mulhi32_all(__m512i a, __m512i b) {
+  __m512i prod_even = _mm512_mul_epu32(a, b);
+  __m512i a_odd     = _mm512_srli_epi64(a, 32);
+  __m512i b_odd     = _mm512_srli_epi64(b, 32);
+  __m512i prod_odd  = _mm512_mul_epu32(a_odd, b_odd);
+  __m512i hi_even   = _mm512_srli_epi64(prod_even, 32);
+  __m512i hi_odd    = _mm512_srli_epi64(prod_odd,  32);
+  const __mmask16 oddmask = 0xAAAA;
+  return _mm512_mask_blend_epi32(oddmask, hi_even, hi_odd);
+}
 
 struct Philox4x32_10_AVX512 {
+  // per-backend constants (scoped)
+  static constexpr std::uint32_t M0 = 0xD2511F53u;
+  static constexpr std::uint32_t M1 = 0xCD9E8D57u;
+  static constexpr std::uint32_t W0 = 0x9E3779B9u;
+  static constexpr std::uint32_t W1 = 0xBB67AE85u;
+
   std::uint32_t c0, c1, c2, c3;
   std::uint32_t k0, k1;
 
@@ -46,7 +59,8 @@ struct Philox4x32_10_AVX512 {
 
   static inline void build_lane_counters(std::uint32_t b0, std::uint32_t b1,
                                          std::uint32_t b2, std::uint32_t b3,
-                                         __m512i& x0, __m512i& x1, __m512i& x2, __m512i& x3) noexcept {
+                                         __m512i& x0, __m512i& x1,
+                                         __m512i& x2, __m512i& x3) noexcept {
     alignas(64) std::uint32_t A0[16], A1[16], A2[16], A3[16];
     std::uint32_t t0=b0,t1=b1,t2=b2,t3=b3;
     for (int i=0;i<16;++i){
@@ -64,26 +78,30 @@ struct Philox4x32_10_AVX512 {
 
   static inline void round_once(__m512i& x0, __m512i& x1, __m512i& x2, __m512i& x3,
                                 __m512i k0v, __m512i k1v) noexcept {
-    __m512i m0 = _mm512_set1_epi32(static_cast<int>(PHILOX_M0));
-    __m512i m1 = _mm512_set1_epi32(static_cast<int>(PHILOX_M1));
+    const __m512i m0 = _mm512_set1_epi32(static_cast<int>(M0));
+    const __m512i m1 = _mm512_set1_epi32(static_cast<int>(M1));
+
     __m512i lo0 = ua_mullo32(m0, x0);
-    __m512i hi0 = ua_mulhi32(m0, x0);
+    __m512i hi0 = ua_mulhi32_all(m0, x0);
     __m512i lo1 = ua_mullo32(m1, x2);
-    __m512i hi1 = ua_mulhi32(m1, x2);
+    __m512i hi1 = ua_mulhi32_all(m1, x2);
+
     __m512i y0 = _mm512_xor_si512(_mm512_xor_si512(hi1, x1), k0v);
     __m512i y1 = lo1;
     __m512i y2 = _mm512_xor_si512(_mm512_xor_si512(hi0, x3), k1v);
     __m512i y3 = lo0;
+
     x0=y0;x1=y1;x2=y2;x3=y3;
   }
 
   inline void block16_store(std::uint64_t* dst) noexcept {
     __m512i x0,x1,x2,x3;
     build_lane_counters(c0,c1,c2,c3,x0,x1,x2,x3);
+
     __m512i k0v=_mm512_set1_epi32(static_cast<int>(k0));
     __m512i k1v=_mm512_set1_epi32(static_cast<int>(k1));
-    __m512i w0v=_mm512_set1_epi32(static_cast<int>(PHILOX_W0));
-    __m512i w1v=_mm512_set1_epi32(static_cast<int>(PHILOX_W1));
+    const __m512i w0v=_mm512_set1_epi32(static_cast<int>(W0));
+    const __m512i w1v=_mm512_set1_epi32(static_cast<int>(W1));
     for(int i=0;i<9;++i){ round_once(x0,x1,x2,x3,k0v,k1v); k0v=_mm512_add_epi32(k0v,w0v); k1v=_mm512_add_epi32(k1v,w1v); }
     round_once(x0,x1,x2,x3,k0v,k1v);
 

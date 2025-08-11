@@ -1,0 +1,8 @@
+D:\code\Universal-Architecture-RNG-Lib\v1.6\src\universal_rng.cpp;D:\code\universal-architecture-rng-lib\v1.6\build\universal_rng_shared.dir\Release\universal_rng.obj
+D:\code\Universal-Architecture-RNG-Lib\v1.6\src\runtime_detect.cpp;D:\code\universal-architecture-rng-lib\v1.6\build\universal_rng_shared.dir\Release\runtime_detect.obj
+D:\code\Universal-Architecture-RNG-Lib\v1.6\src\rng_distributions.cpp;D:\code\universal-architecture-rng-lib\v1.6\build\universal_rng_shared.dir\Release\rng_distributions.obj
+D:\code\Universal-Architecture-RNG-Lib\v1.6\src\simd_normal_avx2.cpp;D:\code\universal-architecture-rng-lib\v1.6\build\universal_rng_shared.dir\Release\simd_normal_avx2.obj
+D:\code\Universal-Architecture-RNG-Lib\v1.6\src\simd_normal_avx512.cpp;D:\code\universal-architecture-rng-lib\v1.6\build\universal_rng_shared.dir\Release\simd_normal_avx512.obj
+D:\code\Universal-Architecture-RNG-Lib\v1.6\src\simd_normal_neon.cpp;D:\code\universal-architecture-rng-lib\v1.6\build\universal_rng_shared.dir\Release\simd_normal_neon.obj
+D:\code\Universal-Architecture-RNG-Lib\v1.6\src\xoshiro256ss_scalar.cpp;D:\code\universal-architecture-rng-lib\v1.6\build\universal_rng_shared.dir\Release\xoshiro256ss_scalar.obj
+D:\code\Universal-Architecture-RNG-Lib\v1.6\src\philox4x32_scalar.cpp;D:\code\universal-architecture-rng-lib\v1.6\build\universal_rng_shared.dir\Release\philox4x32_scalar.obj

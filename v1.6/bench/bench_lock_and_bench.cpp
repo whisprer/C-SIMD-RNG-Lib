@@ -7,11 +7,11 @@
 #include <cstring>
 #include "universal_rng.h"
 
-using clock_t = std::chrono::steady_clock;
+using SteadyClock = std::chrono::steady_clock;
 
 static inline double ms_now() {
   using namespace std::chrono;
-  return duration<double, std::milli>(clock_t::now().time_since_epoch()).count();
+  return duration<double, std::milli>(SteadyClock::now().time_since_epoch()).count();
 }
 
 // SplitMix64 fold to make stable 64-bit checksums quickly
@@ -50,6 +50,18 @@ static void bench_one(ua::Algorithm algo, const char* name,
   init.buffer.capacity_u64 = 8192;
 
   ua::UniversalRng rng(init);
+
+  {
+    auto tier = rng.simd_tier();
+    const char* name = "Scalar (runtime)";
+    switch (tier) {
+      case ua::SimdTier::AVX512: name = "AVX-512 (runtime)"; break;
+      case ua::SimdTier::AVX2:   name = "AVX2 (runtime)";    break;
+      case ua::SimdTier::NEON:   name = "NEON (runtime)";    break;
+      default: break;
+    }
+    std::puts(name);
+  }
 
   std::vector<std::uint64_t> u(N_u64);
   std::vector<double> d(N_double);
@@ -92,13 +104,24 @@ static void bench_one(ua::Algorithm algo, const char* name,
   std::printf("norm sanity: mean=%.6f  var=%.6f (should be ~0, ~1)\n\n", mean, var);
 }
 
-int main(int argc, char** argv) {
+int main(int, char**) {
   // Config via env (so you can sweep sizes without recompiling)
   const std::size_t N_u64   = std::getenv("UA_N_U64")   ? std::strtoull(std::getenv("UA_N_U64"),   nullptr, 10) : (1ull<<24);  // 16M
   const std::size_t N_double= std::getenv("UA_N_DBL")   ? std::strtoull(std::getenv("UA_N_DBL"),   nullptr, 10) : (1ull<<23);  // 8M
   const std::size_t N_norm  = std::getenv("UA_N_NRM")   ? std::strtoull(std::getenv("UA_N_NRM"),   nullptr, 10) : (1ull<<23);  // 8M
   const std::uint64_t seed  = std::getenv("UA_SEED")    ? std::strtoull(std::getenv("UA_SEED"),    nullptr, 16) : 0xDEADBEEFCAFEBABEULL;
   const std::uint64_t stream= std::getenv("UA_STREAM")  ? std::strtoull(std::getenv("UA_STREAM"),  nullptr, 10) : 7ULL;
+
+  // add at the top of main(), before sizes print
+  #if defined(UA_ENABLE_AVX512)
+    std::puts("SIMD: AVX-512 enabled");
+  #elif defined(UA_ENABLE_AVX2)
+    std::puts("SIMD: AVX2 enabled");
+  #elif defined(__aarch64__) || defined(__ARM_NEON)
+    std::puts("SIMD: NEON enabled");
+  #else
+    std::puts("SIMD: scalar only");
+  #endif
 
   std::printf("sizes: u64=%zu  dbl=%zu  nrm=%zu   seed=0x%016llx  stream=%llu\n\n",
               N_u64, N_double, N_norm,

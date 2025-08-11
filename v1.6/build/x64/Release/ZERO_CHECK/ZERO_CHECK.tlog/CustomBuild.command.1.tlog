@@ -1,0 +1,10 @@
+^D:\CODE\UNIVERSAL-ARCHITECTURE-RNG-LIB\V1.6\BUILD\CMAKEFILES\82CE2D1889713447B275E4EC183F5484\GENERATE.STAMP.RULE
+setlocal
+C:\msys64\mingw64\bin\cmake.exe -SD:/code/Universal-Architecture-RNG-Lib/v1.6 -BD:/code/universal-architecture-rng-lib/v1.6/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/code/universal-architecture-rng-lib/v1.6/build/UniversalRng.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

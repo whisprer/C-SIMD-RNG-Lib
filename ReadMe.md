@@ -1,171 +1,121 @@
-# Universal Architecture PRNG std. Replacement C++ Lib
+# Universal Architecture PRNG – High-Performance C++ RNG Library
+A high-performance, cross-platform random number generation library with advanced SIMD and optional GPU acceleration — designed as a drop-in replacement for the C++ Standard Library RNGs in high-throughput workloads.
 
-**A high-performance, cross-platform random number generation library with SIMD and GPU acceleration.**
+Overview
+universal_rng_lib is a modern C++ random number generation library engineered for speed, scalability, and architectural adaptability. It implements multiple high-quality PRNG algorithms, automatically selecting the fastest available CPU instruction set at runtime, with optional GPU acceleration for extreme workloads.
 
-## Overview - [resuced from eird formatting doldrums by the one and only RTC!!! thanxyou :) ]
+The library is particularly optimized for batch random number generation, where it can vastly outperform std::mt19937 and other C++ standard RNGs — especially in simulations, procedural content generation, large-scale statistical analysis, and scientific computing.
 
-`universal_rng_lib` is a fast, flexible RNG library written in modern C++. It supports a range of algorithms including **Xoroshiro128++** and **WyRand**, with runtime autodetection of the best CPU vectorization (SSE2, AVX2, AVX-512, NEON) and optional OpenCL GPU support.
+Two major versions are currently available:
 
-It significantly outperforms the C++ standard library RNGs and can replace them in scientific simulations, games, real-time systems, and more.
+v1.5 – Stable, widely tested, consistently outperforms C++ standard RNGs for SIMD workloads.
 
-## Features
+v1.6 – Experimental, introducing a modular architecture for broader algorithm coverage, new SIMD optimizations, and multi-thread scaling. Not yet universally faster than v1.5 in all cases.
 
-- ✅ Multiple PRNGs: `Xoroshiro128++`, `WyRand`
-- ✅ SIMD Acceleration: SSE2, AVX2, AVX-512, NEON (auto-detect at runtime)
-- ✅ OpenCL GPU support (optional)
-- ✅ Scalar fallback for universal compatibility
-- ✅ Batch generation for improved throughput
-- ✅ Support for 16–1024 bit generation
-- ✅ Cross-platform: Windows (MSVC, MinGW), Linux
-- ✅ MIT Licensed
+Features
+Multiple PRNG Algorithms
 
-## Quick Start
+Xoroshiro128++
 
-### Requirements
+WyRand
 
-- C++17-compatible compiler
-- CMake 3.15+
-- Ninja (recommended)
-- OpenCL SDK (optional)
+Philox4x32-10
 
-### Build Instructions
+Advanced SIMD Acceleration
 
-#### Linux/Mac (bash)
-```bash
-git clone https://github.com/YOUR_USERNAME/universal_rng_lib.git
+SSE2, AVX2, AVX-512, NEON (auto-detected at runtime)
+
+GPU Offload (Optional)
+
+OpenCL back-end for massive parallelism
+
+Portable Scalar Fallback
+
+Works on any architecture, including non-SIMD CPUs
+
+Batch Generation Support
+
+Significantly improved throughput when generating large arrays of random values
+
+Multiple Output Formats
+
+16–1024 bit generation
+
+Cross-Platform
+
+Windows (MSVC, MinGW) and Linux
+
+MIT Licensed
+
+Version Comparison
+Feature / Metric	v1.5 (Stable)	v1.6 (Experimental)
+SIMD Support	SSE2, AVX2, AVX-512, NEON	SSE2, AVX2, AVX-512, NEON
+GPU OpenCL Support	✅	✅
+Algorithms	Xoroshiro128++, WyRand	Xoroshiro128++, WyRand, Philox4x32-10
+Multi-thread Scaling	Limited	✅ Affinity-based scaling
+SIMD Batch Throughput	Excellent	Excellent to Exceptional
+Single Number Generation	Competitive, but std::mt19937 can win	Competitive, but std::mt19937 can win
+Portability	Mature, well-tested	Incomplete — more OS/arch work needed
+Recommended For	Production workloads	Performance testing, R&D
+
+Performance Notes
+Best Use Cases:
+
+Procedural content generation in games
+
+Large-scale Monte Carlo simulations
+
+Financial modeling and statistical analysis
+
+Any SIMD-friendly bulk number generation workload
+
+When to Prefer std::mt19937 or Other std RNGs:
+
+If your workload primarily generates single random numbers at infrequent intervals on non-SIMD CPUs.
+
+SIMD vs. Scalar:
+
+Batch SIMD performance can be orders of magnitude faster than scalar generation.
+
+As workloads shrink to single number generation, C++’s std::mt19937 can match or surpass these PRNGs.
+
+Building the Library
+bash
+Copy
+Edit
+# Clone the repository
+git clone https://github.com/yourname/universal_rng_lib.git
 cd universal_rng_lib
+
+# Create build directory
 mkdir build && cd build
-cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build . --parallel
-./rng_selftest
-```
 
-#### Windows (MSYS2 MinGW64 shell)
-```bash
-git clone https://github.com/YOUR_USERNAME/universal_rng_lib.git
-cd universal_rng_lib
-mkdir build && cd build
-cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DRNG_WITH_OPENCL=OFF
-cmake --build . --parallel
-./rng_selftest.exe
-```
+# Configure with CMake
+cmake .. -DCMAKE_BUILD_TYPE=Release
 
-> **Note:** If AVX2 is supported, it will automatically be compiled in and used.
+# Build
+cmake --build . --config Release
+This produces both static (.lib / .a) and dynamic (.dll / .so) library builds.
 
-### Usage Example
+Linking and Usage
+Example (MSVC, static link):
 
-```cpp
-#include "universal_rng.h"
-#include <iostream>
+cpp
+Copy
+Edit
+#include "universal_rng.hpp"
 
 int main() {
-    // Create RNG instance (seed, algorithm_id, bitwidth)
-    universal_rng_t* rng = universal_rng_new(1337, 0, 1);
-
-    // Generate 64-bit random integer
-    uint64_t val = universal_rng_next_u64(rng);
-    std::cout << "Random u64: " << val << std::endl;
-
-    // Generate double in range [0,1)
-    double d = universal_rng_next_double(rng);
-    std::cout << "Random double: " << d << std::endl;
-
-    // Cleanup
-    universal_rng_free(rng);
+    universal_rng rng;
+    uint64_t val = rng.next_u64();
+    double dbl = rng.next_double();
 }
-```
+Compile and link:
 
-### Replace C++ Standard RNG
+powershell
+Copy
+Edit
+cl /O2 /I include main.cpp build/Release/universal_rng.lib
+License
+MIT License – See LICENSE file for details.
 
-To use `universal_rng_lib` in place of `std::mt19937` or `std::default_random_engine`:
-
-**Replace all instances of:**
-```cpp
-std::mt19937 rng(seed);
-```
-
-**with:**
-```cpp
-auto* rng = universal_rng_new(seed, 0, 1);  // use algorithm 0 = Xoroshiro128++
-```
-
-**Replace:**
-```cpp
-rng(); // or dist(rng)
-```
-
-**with:**
-```cpp
-universal_rng_next_u64(rng);
-```
-
-Use `universal_rng_next_double(rng);` for floating-point needs.
-
-**Replace cleanup:**
-```cpp
-delete rng;
-```
-
-**with:**
-```cpp
-universal_rng_free(rng);
-```
-
-## File Structure
-
-```
-.
-├── include/                # All public headers
-│   └── universal_rng.h    # Main header
-├── Benchmarking/           # Benchmarking Results 
-│                           # [compared against C++ std. lib]
-├── src/                    # Source code
-│   ├── simd_avx2.cpp
-│   ├── simd_sse2.cpp
-│   ├── simd_avx512.cpp
-│   ├── universal_rng.cpp
-│   └── runtime_detect.cpp
-├── lib_files/              # Prebuilt binaries
-│   ├── mingw_shared/
-│   ├── msvc_shared/
-│   └── linux_shared/
-├── extras/                 # Environment setups and tools
-│   └── windows/
-├── docs/                   # In-depth design documentation
-│   ├── key_SIMD-implementation_design-principles.md
-│   ├── explain_of_3-7's_refactor.md
-│   └── opencl-implementation-details.md
-└── tests/                  # Self-test and benchmarks
-```
-
-## SIMD & Dispatch Design
-
-- Auto-detects best available instruction set at runtime
-- Gracefully falls back to scalar or SSE2
-- Batches can be used to further accelerate performance
-- Detection failures are handled gracefully
-
-**Example detection result:**
-```yaml
-CPU feature detection:
-  SSE2: Yes
-  AVX2: Yes
-  AVX512: No
-Trying AVX2 implementation...
-Using AVX2 implementation
-```
-
-## Benchmarking & Performance
-
-- Batch mode yields **1.7×–2.5×** speedup over naive generation
-- AVX2 performs **~3–5×** faster than `std::mt19937`
-- AVX-512 versions under development
-
-## License
-
-MIT License – see [LICENSE.md](LICENSE.md) for full terms.
-
-## Reference
-
-This library is partially inspired by:
-- David Blackman & Sebastiano Vigna's paper on Scrambled Linear PRNGs (SLRNG)

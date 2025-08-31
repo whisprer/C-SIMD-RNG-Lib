@@ -586,9 +586,102 @@ uses no-carry counter bump (good for bench scale)
 
 
 
+If you ever get weird errors again, re-open include/ua/ua_rng.h and make sure it starts with #pragma once on line 1 and contains only C++ (no stray cat << heredoc text).
+
+why today’s rate is a bit lower than your earlier ~2.0–2.1 G/s spikes
+
+We’re using xoroshiro128++ (2×64 state) right now, not your earlier xoshiro256 variant. That changes instruction mix and throughput a bit.
+
+Different bench loop (your current bench prints “CPU batch …”) vs. the earlier multi-algo bench that also unrolled more aggressively.
+
+Still a good baseline; we can climb from here with unroll + wider batch writes if you want.
+
+next moves (in order, zero drama)
+
+Keep benching with the direct g++ command above so you always have a working binary.
+
+I’ll wire in Philox4x32-10 AVX2 and a multi-algo bench so you can compare xoroshiro vs philox apples-to-apples on your laptop — no CMake required.
+
+After that, we’ll re-introduce a tiny, ASCII-only CMake that mirrors the direct compile (and won’t fight you).
+
+If you’re ready to push performance, I can drop the Philox AVX2 implementation + a fresh bench/bench_main.cpp that runs both algorithms (full file paths, complete artifacts) in my next reply.
 
 
 
 
+alright fren — back to pure speed. I’m giving you a clean, minimal, no-CMake setup that:
+
+uses xoroshiro128++ (scalar + AVX2) as the default workhorse,
+
+adds a Philox4x32-10 AVX2 that’s actually fast (4 blocks/iter, in-register packing),
+
+exposes a tiny wrapper ua::Rng for your existing bench style,
+
+adds a standalone bench that times all of them properly,
+
+builds with one g++ line on MSYS2.
+
+No placeholders. Full file paths. You can drop these in over your current v1.7 tree.
 
 
+“Is double faster?” On your box the double path is now basically neck-and-neck with u64 (1.646 ms vs 1.654 ms for 2M draws). That’s expected: with our current design the cost is mostly stores + a tiny transform. We can make doubles even cheaper by using the exponent-injection bit-cast trick (no integer→FP multiply), which typically bumps the double rate a few percent and stabilizes perf on big batches.
+
+Your UA_STREAM_STORES build failed because include/ua/ua_xoroshiro128pp.h is truncated again (unterminated #if, mangled _mm256_add_epi64). That means the file on disk got cut mid-line during a paste. Delete the EXE before rebuilds so you don’t accidentally run stale binaries.
+
+Below are clean, drop-in files that:
+
+keep your fast unrolled AVX2 xoroshiro128++,
+
+switch double generation to the bit-cast method in both scalar and AVX2,
+
+keep the aligned, unrolled u64 path,
+
+add an optional UA_BENCH_N macro so you can test large N where streaming stores matter.
+
+
+=======
+
+
+
+nice captures, fren. Here’s what they say and how we fix the weirdness fast:
+
+Your latest runs show cfg: AVX2=1, SCALAR=0, so you are on the vector path.
+
+Throughput ~0.60–0.67 G elems/s for both u64 and double ⇒ ~4.8–5.4 GB/s of writes. That screams memory-bandwidth bound on a single thread (and/or CPU de-turbo / power throttling), not ALU bound. Earlier 1.8–2.1 G/s spikes were “compute in L3 + high turbo”. Now you’re hitting DRAM or running at a lower clocks/perf state.
+
+phine@woflaptop MINGW64 /d/code/Universal-Architecture-RNG-Lib/v1.7
+$ ./ua_rng_bench.exe
+cfg: N=64000000  AVX2=1  STREAM=1  SCALAR=0  PIN_CORE=2
+u64: N=64000000  best 32.617 ms (1962.14 M/s)  med 32.740 ms (1954.80 M/s)  [tier=2]
+      cycles/elem: best 1.32  med 1.33
+  checksum: d140487e029fbb1f
+double: N=64000000  best 35.689 ms (1793.28 M/s)  med 35.978 ms (1778.86 M/s)  [tier=2]
+      cycles/elem: best 1.45  med 1.46
+  sum: 31994602.406884
+
+phine@woflaptop MINGW64 /d/code/Universal-Architecture-RNG-Lib/v1.7
+$
+
+
+===
+
+
+these runs look great, fren — we’ve got the story now:
+
+small-N: compute-bound, you’re at ~1.9–2.0 G/s with ~1.30–1.43 cycles/elem. That’s excellent.
+
+big-N, no streaming: memory-bound at ~1.55–1.78 G/s.
+
+big-N, with streaming stores: u64 jumps to ~1.96 G/s and cycles/elem drops to ~1.32. win.
+
+why didn’t doubles jump the same? because I only enabled non-temporal (streaming) stores for the u64 path. the double path still uses _mm256_storeu_pd, so it’s filling caches and paying RFOs.
+
+below is a drop-in header that:
+
+keeps the unrolled AVX2 xoroshiro128++,
+
+uses the exponent-injection trick for doubles (we already did),
+
+adds streaming stores for doubles (when aligned), plus a light unroll (8 vectors = 32 doubles per loop, mirroring u64),
+
+fences once at the end when streaming is on

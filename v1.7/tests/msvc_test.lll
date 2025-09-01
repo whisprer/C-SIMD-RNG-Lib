@@ -3,7 +3,7 @@
 #include "ua/ua_rng.h"
 
 int main() {
-    ua::Rng rng(123456789u);
+    ua::Rng rng(123456789ull);
 
     std::uint64_t x = 0;
     rng.u64(&x, 1);

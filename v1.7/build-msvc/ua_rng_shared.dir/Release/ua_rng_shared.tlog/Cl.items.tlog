@@ -1,0 +1,4 @@
+D:\code\Universal-Architecture-RNG-Lib\v1.7\src\ua_cpuid.cpp;D:\code\Universal-Architecture-RNG-Lib\v1.7\build-msvc\ua_rng_shared.dir\Release\ua_cpuid.obj
+D:\code\Universal-Architecture-RNG-Lib\v1.7\src\ua_rng.cpp;D:\code\Universal-Architecture-RNG-Lib\v1.7\build-msvc\ua_rng_shared.dir\Release\ua_rng.obj
+D:\code\Universal-Architecture-RNG-Lib\v1.7\src\xoshiro256ss_avx2.cpp;D:\code\Universal-Architecture-RNG-Lib\v1.7\build-msvc\ua_rng_shared.dir\Release\xoshiro256ss_avx2.obj
+D:\code\Universal-Architecture-RNG-Lib\v1.7\src\xoshiro256ss_avx512.cpp;D:\code\Universal-Architecture-RNG-Lib\v1.7\build-msvc\ua_rng_shared.dir\Release\xoshiro256ss_avx512.obj

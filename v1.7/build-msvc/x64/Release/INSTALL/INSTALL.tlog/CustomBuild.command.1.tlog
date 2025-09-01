@@ -1,0 +1,10 @@
+^D:\CODE\UNIVERSAL-ARCHITECTURE-RNG-LIB\V1.7\BUILD-MSVC\CMAKEFILES\2CF067192C6F0BD0B92EAA88081845C2\INSTALL_FORCE.RULE
+setlocal
+cd .
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

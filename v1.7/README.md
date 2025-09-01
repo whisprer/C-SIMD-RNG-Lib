@@ -1,78 +1,109 @@
+/README.md
 # UA RNG v1.7
 
-A fast, portable C++20 random number library with **runtime SIMD dispatch**:
+A fast, portable **C++20** random number generation library with **runtime SIMD dispatch** and a clean modern API.
 
-- Scalar baseline (xoshiro256**)
-- AVX2 4× lanes
-- AVX-512F 8× lanes (optional)
-- Streams: `u64`, `[0,1)` `double`, and `N(0,1)` normals (polar)
-- `jump()` for 2^128 subsequence
+- **Scalar baseline:** xoshiro256**
+- **AVX2:** 4× lanes
+- **AVX-512F:** 8× lanes (optional)
+- **Streams:** `u64`, `[0,1)` `double`, `N(0,1)` normal (polar method)
+- **Subsequence support:** `jump()` for 2^128 step-ahead
+- **Cross-platform:** Linux, macOS, Windows (MSVC / MinGW)
 
-## Usage
-
-```cpp
-#include "ua/ua_rng.h"
-ua::Rng rng(1234);
-std::vector<uint64_t> v(1<<20);
-rng.generate_u64(v.data(), v.size());
-Force a backend at runtime (for testing):
-
-ini
-Copy code
-UA_FORCE_BACKEND=scalar ./ua_rng_bench
-UA_FORCE_BACKEND=avx2   ./ua_rng_bench
-UA_FORCE_BACKEND=avx512 ./ua_rng_bench
-Build
-bash
-Copy code
-# Linux/macOS
-cmake -S . -B build -DUA_BUILD_BENCH=ON -DUA_ENABLE_AVX2=ON -DUA_ENABLE_AVX512=ON
-cmake --build build -j
-./build/ua_rng_bench
-powershell
-Copy code
-# Windows Developer Powershell (MSVC)
-cmake -S . -B build
-cmake --build build --config Release
-.\build\Release\ua_rng_bench.exe
-Design
-Backends live in separate translation units compiled with ISA flags.
-
-The façade (ua::Rng) picks the best-supported backend at runtime via CPUID and OSXSAVE checks.
-
-Doubles use exponent injection (53-bit mantissa) for speed & reproducibility.
-
-Normal uses Marsaglia Polar (scalar + AVX2 vectorized rejection).
-
-Notes
-If you ship binaries, keep UA_ENABLE_AVX2/AVX512 ON so the library contains those paths, but your client code stays portable.
-
-Set UA_STREAM_STORES=1 to use streaming stores when buffers are 32/64-byte aligned.
-
-markdown
-Copy code
+UA RNG is designed to be a **drop-in, high-performance RNG** for Monte Carlo, simulations, procedural content, and anywhere large batches of random numbers are required.
 
 ---
 
-# what this gives you right now
+## 🚀 Quick Usage
 
-- **Portability:** One `ua_rng` static lib works everywhere. It only uses AVX2/AVX-512 where the CPU+OS say it’s safe.
-- **Speed:** On AVX2/AVX-512 boxes you’ll see 4–8× lane throughput. Scalar path is solid and uses xoshiro256** (great quality & speed).
-- **Normals:** Vectorized polar on AVX2 (practical & fast), scalar fallback everywhere else.
-- **Clean API:** `generate_u64`, `generate_double`, `generate_normal`, `jump`, `simd_tier()`.
+```cpp
+#include "ua/ua_rng.h"
 
-# how to drop into your repo
+int main() {
+    ua::Rng rng(1234);  // seed
 
-- Replace your current `include/ua/*`, `src/*`, `bench/*`, and top-level `CMakeLists.txt` with the ones above under `/v1.7/…`.
-- Keep your `docs/g-petey_convo.md` alongside — the build doesn’t touch it.
+    std::vector<uint64_t> v(1<<20);
+    rng.generate_u64(v.data(), v.size());
 
-# next perf pushes we can do (once you’re ready)
+    double x = rng.generate_double();
+    double n = rng.generate_normal();
+}
 
-- add **per-backend jump()** for AVX paths (vectorized jump constants)
-- add **Philox4x32-10** AVX2 backend for counter-based parallel streams
-- add **Ziggurat** normals (tables in `.rodata`, AVX2 sampler)
-- implement **aligned stream stores** with runtime alignment detection + non-temporal write combining thresholds
-- consider **batch API** returning lambdas that fill N elements per call to reduce virtual indirection in hot loops
+⚙️ Build
+Linux / macOS
+cmake -S . -B build -DUA_BUILD_BENCH=ON -DUA_ENABLE_AVX2=ON -DUA_ENABLE_AVX512=ON
+cmake --build build -j
+./build/ua_rng_bench
+
+Windows (MSVC, Developer PowerShell)
+cmake -S . -B build
+cmake --build build --config Release
+.\build\Release\ua_rng_bench.exe
+
+Runtime Backend Selection
+
+You can force a backend for testing:
+
+UA_FORCE_BACKEND=scalar ./ua_rng_bench
+UA_FORCE_BACKEND=avx2   ./ua_rng_bench
+UA_FORCE_BACKEND=avx512 ./ua_rng_bench
+
+🎯 Design Notes
+
+Backends live in separate translation units compiled with ISA flags.
+
+ua::Rng façade selects the best backend at runtime via CPUID + OSXSAVE checks.
+
+Doubles use exponent injection (53-bit mantissa) for reproducibility.
+
+Normals use Marsaglia Polar (scalar + AVX2 vectorized rejection).
+
+Optional UA_STREAM_STORES=1 enables non-temporal writes when buffers are aligned.
+
+📊 Version History / Comparison
+Feature / Metric	v1.5 (Stable)	v1.6 (Experimental)	v1.7 (Current)
+SIMD Support	SSE2, AVX2, AVX-512, NEON	SSE2, AVX2, AVX-512, NEON	Scalar, AVX2, AVX-512F (runtime dispatch)
+Algorithms	Xoroshiro128++, WyRand	+ Philox4x32-10	xoshiro256**, normals (Polar)
+GPU Support	OpenCL (optional)	OpenCL (partial)	Dropped (CPU SIMD focus, revisit later)
+Multi-thread Scaling	Limited	Introduced affinity scaling	Out-of-scope (batch SIMD focus)
+Batch Throughput	Excellent	Excellent to Exceptional	4× lanes (AVX2), 8× lanes (AVX-512F)
+Single Number Gen.	Competitive, std::mt19937 sometimes	Same	Fast scalar baseline + SIMD batch paths
+API Style	C API (handles)	Hybrid experimental modular API	Modern C++ façade (ua::Rng)
+Portability	Mature, well-tested	Incomplete OS/arch support	Unified, per-OS builds w/ runtime dispatch
+Recommended For	Production workloads	R&D, perf testing	Production workloads needing portability + perf
+
+For full historical details see CHANGELOG.md
+.
+
+📦 What You Get
+
+Portability: One static lib works everywhere, SIMD only used when safe.
+
+Speed: 4×–8× throughput on SIMD-capable CPUs.
+
+Normals: Vectorized Polar on AVX2, scalar fallback elsewhere.
+
+Clean API: generate_u64, generate_double, generate_normal, jump, simd_tier().
+
+🔮 Next Perf Pushes
+
+Planned improvements beyond 1.7 include:
+
+Per-backend jump() for AVX paths
+
+Philox4x32-10 AVX2 backend for counter-based parallel streams
+
+Ziggurat normals (AVX2, table-based)
+
+Aligned stream stores with runtime alignment detection
+
+See Development Roadmap
+ for details.
+
+📜 License
+
+MIT License – see LICENSE
+ file.
 
 
-
+---

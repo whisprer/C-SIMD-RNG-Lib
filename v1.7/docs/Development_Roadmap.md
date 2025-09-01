@@ -1,36 +1,50 @@
-\# Universal RNG Library - Complete Development Roadmap
+/docs/Development\_Roadmap.md
+
+\# UA RNG Library – Development Roadmap
 
 
 
-\## Current Status
+This roadmap outlines the current state of UA RNG (v1.7) and the priorities for future releases.  
+
+It is intended as a living document to guide contributors and users on where the library is headed.
+
+
+
+---
+
+
+
+\## Current Status (v1.7)
+
+
 
 \*\*Working Features:\*\*
 
-\- Xoroshiro128++ and WyRand algorithms implemented
+\- Modern C++20 façade: `ua::Rng` with scalar, AVX2, and AVX-512F backends
 
-\- Multi-platform SIMD support (Scalar, SSE2, AVX2, AVX512, NEON)
+\- Runtime feature detection via CPUID + OSXSAVE
 
-\- Runtime CPU feature detection and optimal implementation selection
+\- Fast batch generation: `generate\_u64`, `generate\_double`, `generate\_normal`
 
-\- Batch generation capabilities
+\- Normals via Marsaglia Polar method (vectorized on AVX2)
 
-\- Universal C API with multiple bit-width support (16, 32, 64, 128, 256, 512, 1024 bit)
+\- Jump-ahead subsequences (scalar baseline)
 
-\- Cross-platform build system (Windows MSVC, MinGW64, Linux GCC)
+\- Clean CMake build system for Linux, macOS, Windows
 
 
 
-\*\*Current Issues:\*\*
+\*\*Current Limitations:\*\*
 
-\- Build system complexities with shared library (.dll/.so) generation
+\- SIMD `jump()` not yet implemented
 
-\- AVX2 performance not matching theoretical potential
+\- No GPU backend (OpenCL/CUDA removed in 1.7)
 
-\- AVX-512 detection disabled/problematic
+\- No cryptographic PRNGs (ChaCha, AES, etc.)
 
-\- Function call overhead from virtual dispatch
+\- Streaming stores still experimental
 
-\- Batch mode speedup only 1.x-2.x instead of theoretical 4x-8x
+\- Limited algorithm diversity (xoshiro/xoroshiro family only)
 
 
 
@@ -42,71 +56,31 @@
 
 
 
-\### 1. Build System Stabilization
+\### 1. SIMD Feature Parity
 
-\*\*Goal:\*\* Reliable shared library generation across platforms
+\- Add per-backend `jump()` constants for AVX2/AVX-512
 
-
-
-\*\*Tasks:\*\*
-
-\- Fix MinGW64 shared library build (`.dll` + `.dll.a`)
-
-\- Stabilize MSVC shared library build (`.dll` + `.lib`)
-
-\- Ensure Linux shared library build (`.so` files)
-
-\- Resolve CMake toolchain detection issues
-
-\- Add proper DLL export mechanisms for Windows
+\- Ensure reproducibility between scalar and SIMD streams
 
 
 
-\### 2. Performance Optimization - AVX2
+\### 2. Algorithm Expansion
 
-\*\*Goal:\*\* Achieve theoretical 4x speedup in AVX2 batch mode
+\- \*\*Philox4x32-10 (AVX2)\*\* for parallel counter-based streams
 
+\- \*\*Ziggurat normals\*\* (table-driven, AVX2 vectorized)  
 
-
-\*\*Specific Areas:\*\*
-
-\- \*\*Function call overhead reduction:\*\* Replace virtual function dispatch with template-based dispatch or direct calls
-
-\- \*\*Memory alignment optimization:\*\* Ensure all AVX2 operations use properly aligned memory
-
-\- \*\*Intrinsics optimization:\*\* Implement core xoroshiro128++ directly with AVX2 intrinsics instead of wrapping scalar
-
-\- \*\*Loop unrolling:\*\* Aggressive unrolling in batch generation loops
-
-\- \*\*Memory copy reduction:\*\* Minimize unnecessary data movement between SIMD registers and memory
+\- \*\*PCG family\*\* as an additional high-quality baseline
 
 
 
-\*\*Compiler Optimizations:\*\*
+\### 3. Performance Tuning
 
-\- Test `-O3 -march=native -funroll-loops` flags
+\- Optimize streaming stores with runtime alignment detection
 
-\- Investigate function inlining opportunities
+\- Explore cache-aware write combining for batch fills
 
-\- Profile-guided optimization (PGO) exploration
-
-
-
-\### 3. AVX-512 Support Restoration
-
-\*\*Goal:\*\* Re-enable and optimize AVX-512 detection and implementation
-
-
-
-\*\*Tasks:\*\*
-
-\- Fix CPU detection for AVX-512 variants (AVX-512F, AVX-512VL, AVX-512DQ, etc.)
-
-\- Implement runtime selection for specific AVX-512 feature subsets
-
-\- Comprehensive benchmarking across different AVX-512 implementations
-
-\- Target theoretical 8x speedup in batch mode
+\- Reduce virtual indirection in hot loops (batch API refinements)
 
 
 
@@ -118,73 +92,35 @@
 
 
 
-\### 4. Architecture Improvements
+\### 4. API \& Architecture
 
-\*\*Memory Management:\*\*
+\- Extended batch API (lambda fillers, flexible buffer sizes)
 
-\- Replace remaining raw pointers with `std::unique\_ptr`, `std::shared\_ptr`
+\- Error handling and diagnostic hooks
 
-\- Ensure consistent RAII patterns across all SIMD implementations
-
-\- Standardize memory management patterns between implementations
+\- Debug/profiling build variants
 
 
 
-\*\*API Enhancements:\*\*
+\### 5. Cryptographic PRNGs
 
-\- Add logging/verbose mode for debugging and optimization
+\- ChaCha20 PRNG
 
-\- Implement comprehensive error handling
+\- AES-based PRNG (leveraging AES-NI)
 
-\- Add performance profiling hooks
-
-\- Create debug vs release build variants
+\- RDRAND/RDSEED passthrough wrappers
 
 
 
-\### 5. Algorithm Expansion
+\### 6. Extended Platforms
 
-\*\*Cryptographically Secure Algorithms:\*\*
+\- \*\*Rust bindings\*\* (via cxx or FFI)
 
-\- ChaCha20-based PRNG
+\- \*\*Python bindings\*\* (pybind11)
 
-\- AES-based PRNG (leveraging AES-NI instructions)
+\- \*\*WebAssembly SIMD\*\* for browser deployment
 
-\- RDRAND/RDSEED hardware entropy integration
-
-
-
-\*\*Additional Fast Algorithms:\*\*
-
-\- PCG (Permuted Congruential Generator) family
-
-\- SplitMix variants
-
-\- Other state-of-the-art fast PRNGs
-
-
-
-\### 6. Extended Platform Support
-
-\*\*GPU Acceleration:\*\*
-
-\- Complete OpenCL implementation (currently stubbed)
-
-\- CUDA support for NVIDIA GPUs
-
-\- Vulkan compute shader implementation
-
-\- Metal support for Apple platforms
-
-
-
-\*\*Additional SIMD:\*\*
-
-\- ARM NEON optimization completion
-
-\- RISC-V vector extensions (future-proofing)
-
-\- WebAssembly SIMD for browser deployment
+\- \*\*ARM NEON\*\* backend for Apple Silicon / ARM64 servers
 
 
 
@@ -196,97 +132,37 @@
 
 
 
-\### 7. Multi-Language Bindings
+\### 7. Multi-Language Ecosystem
 
-\*\*Rust Port:\*\*
+\- Rust native implementation with `std::simd`
 
-\- Complete Rust implementation leveraging Rust's SIMD capabilities
+\- WASM module for JS/TS usage
 
-\- Safe wrapper around C implementation
-
-\- Native Rust algorithms using `std::simd`
+\- Go \& C# bindings for ecosystem adoption
 
 
 
-\*\*JavaScript/WebAssembly:\*\*
-
-\- Browser-compatible WASM module
-
-\- Node.js native module
-
-\- High-performance web applications support
-
-
-
-\*\*Other Language Bindings:\*\*
-
-\- Python ctypes/cffi bindings
-
-\- Go CGO bindings
-
-\- C# P/Invoke bindings
-
-
-
-\### 8. Advanced Features
-
-\*\*Bit-Width Flexibility:\*\*
-
-\- Complete implementation of all bit widths (16, 32, 64, 128, 256, 512, 1024)
-
-\- Optimized batch generation for each bit width
-
-\- Memory-efficient packed generation modes
-
-
-
-\*\*Command-Line Interface:\*\*
-
-\- Benchmarking suite with hardware mode selection
-
-\- Performance testing across different bit widths
-
-\- Hardware capability discovery tool
-
-\- Batch generation utilities
-
-
-
-\*\*Advanced Optimizations:\*\*
-
-\- Cache-conscious data layout techniques
+\### 8. Advanced Optimizations
 
 \- NUMA-aware memory allocation
 
-\- Thread-local storage optimization
-
 \- Lock-free parallel generation
 
+\- Thread-local RNG instances with reproducible seeds
 
-
-\### 9. Quality and Reliability
-
-\*\*Testing Infrastructure:\*\*
-
-\- Comprehensive unit tests for all algorithms
-
-\- Statistical quality tests (TestU01, PractRand)
-
-\- Cross-platform CI/CD pipeline
-
-\- Performance regression testing
+\- Profile-guided optimization (PGO) builds
 
 
 
-\*\*Documentation:\*\*
+\### 9. Quality \& Reliability
 
-\- Complete API documentation
+\- Statistical test suite (TestU01, PractRand)
 
-\- Performance characteristics guide
+\- Continuous integration across Linux/macOS/Windows
 
-\- Platform-specific optimization guides
+\- Cross-compiler verification (GCC, Clang, MSVC)
 
-\- Algorithm comparison and selection guide
+\- Performance regression benchmarks in CI
 
 
 
@@ -298,83 +174,27 @@
 
 
 
-\### Current vs Target Performance
+\*\*Batch Generation\*\*
 
-\*\*Single Generation:\*\*
+\- AVX2: 4× speedup over scalar
 
-\- Current: Poor compared to reference xoroshiro128+
+\- AVX-512F: 8× speedup over scalar
 
-\- Target: Match or exceed reference implementation performance
-
-
-
-\*\*Batch Generation:\*\*
-
-\- Current: 1.x-2.x speedup
-
-\- Target AVX2: 4x speedup minimum
-
-\- Target AVX-512: 8x speedup minimum
-
-\- Target GPU: 100x+ speedup for large batches
+\- Normals (Polar): ≥2× faster on AVX2 vs scalar
 
 
 
-\### Optimization Strategy Priorities
+\*\*Single Value\*\*
 
-1\. \*\*Eliminate virtual dispatch overhead\*\* in hot paths
-
-2\. \*\*Direct SIMD implementation\*\* of core algorithms
-
-3\. \*\*Memory access pattern optimization\*\* for cache efficiency
-
-4\. \*\*Compiler optimization exploitation\*\* through better code structure
-
-5\. \*\*Hardware-specific tuning\*\* for different CPU architectures
+\- Match or exceed xoshiro256\*\* reference performance
 
 
 
----
+\*\*Cryptographic PRNGs\*\*
 
+\- Comparable to ChaCha20 reference implementations
 
-
-\## Technical Debt and Cleanup
-
-
-
-\### Code Quality
-
-\- Remove unused variables/functions causing compiler warnings
-
-\- Standardize error handling patterns
-
-\- Implement consistent logging throughout
-
-\- Add comprehensive input validation
-
-
-
-\### Architecture Refinement
-
-\- Simplify the factory pattern implementation
-
-\- Reduce template complexity where possible
-
-\- Improve separation of concerns between detection, selection, and generation
-
-\- Better abstraction of platform-specific code
-
-
-
-\### Build System
-
-\- Simplify CMake configuration complexity
-
-\- Add proper dependency management
-
-\- Create distribution packaging (vcpkg, Conan, etc.)
-
-\- Automated testing across multiple compiler versions
+\- AES PRNG: leverage hardware AES-NI for minimal overhead
 
 
 
@@ -386,39 +206,13 @@
 
 
 
-\### Performance Benchmarks
+\- Deterministic reproducibility across backends
 
-\- Single u64 generation: Match reference implementations
+\- Zero memory leaks or UB across platforms
 
-\- AVX2 batch: 4x+ speedup over scalar
+\- Clear performance documentation for all algorithms
 
-\- AVX-512 batch: 8x+ speedup over scalar
-
-\- GPU batch: 100x+ speedup for large batches
-
-
-
-\### Quality Metrics
-
-\- Pass all statistical randomness tests
-
-\- Zero memory leaks across all platforms
-
-\- Deterministic behavior across platforms
-
-\- Sub-microsecond initialization time
-
-
-
-\### Usability Metrics  
-
-\- Single-header deployment option
-
-\- Zero-configuration builds on major platforms
-
-\- Runtime feature detection with graceful fallbacks
-
-\- Clear performance characteristics documentation
+\- Consistent user API regardless of backend
 
 
 
@@ -426,5 +220,5 @@
 
 
 
-This roadmap represents a comprehensive path from the current working but sub-optimal implementation to a world-class, multi-platform, high-performance random number generation library suitable for everything from embedded systems to high-performance computing applications.
+\*This roadmap evolves with each release. Contributions, suggestions, and experiments are always welcome.\*
 

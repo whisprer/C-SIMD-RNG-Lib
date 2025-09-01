@@ -241,6 +241,10 @@ for (int lane = 0; lane < 4 && i < n; ++lane) {
   }
 }
 
+}
+
+}
+
 double Xoshiro256ssAVX2::uniform_scalar() noexcept {
   constexpr std::uint64_t EXP = 0x3FFull << 52;
   alignas(32) std::uint64_t tmp[4];

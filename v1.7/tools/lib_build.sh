@@ -22,8 +22,7 @@ cmake -S "$ROOT" -B "$BUILD" -G "Ninja" \
   -DUA_BUILD_SHARED=ON
 
 cmake --build "$BUILD" -j
-
 cmake --install "$BUILD" --prefix "$INSTALL_DIR"
 
-echo "[ua] installed tree:"
+echo "[ua] installed files:"
 find "$INSTALL_DIR" -maxdepth 3 -type f | sed "s|$INSTALL_DIR/||" | sort

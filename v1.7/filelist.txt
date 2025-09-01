@@ -14,7 +14,13 @@ X:.  # root drive/directory
 |     
 +--CMake
 |		ua_rngConfig.cmake.in			# CMake .config file
+|
+|
+|
 +---dist									# Output folder for built files
+|
+|
+|
 +---docs
 |       g-petey_convo.md  					# Then record of the conversation between myself and ChatGPT as this li was developed
 |       

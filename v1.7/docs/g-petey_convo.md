@@ -685,3 +685,177 @@ uses the exponent-injection trick for doubles (we already did),
 adds streaming stores for doubles (when aligned), plus a light unroll (8 vectors = 32 doubles per loop, mirroring u64),
 
 fences once at the end when streaming is on
+
+
+your ua_rng_bench is now reporting simd=AVX2 for u64/double, and you’ve already halved the cycles/elem compared to scalar:
+
+u64: ~5.0 → 2.1 cyc/elem ✅
+
+double[0,1): ~3.1 → 2.2 cyc/elem ✅
+
+normal N(0,1): still ~52 cyc/elem ❌ (scalar-ish path bottlenecking)
+
+why normals are slow
+
+The Box–Muller / Marsaglia polar implementation we’re running is still basically scalar math in a loop. Even though the uniform draws are SIMD, we drop down to scalar std::log/std::sqrt lane by lane. That kills throughput.
+
+next optimizations
+
+Vectorized log/sqrt
+
+Use _mm256_log_pd and _mm256_sqrt_pd equivalents.
+
+GCC/Clang don’t have intrinsics for log → but we can pull in SVML (-mavx2 -fveclib=SVML on GCC/ICX) or implement a fast polynomial log approximation inline.
+
+Batching
+
+Generate big blocks of uniforms, reject-mask once, then apply Box–Muller to all accepted lanes.
+
+Reduces rejection overhead.
+
+Alternative algorithm
+
+Ziggurat method or ratio-of-uniforms can run ~4–6 cyc/elem vectorized.
+
+The Intel MKL Ziggurat hits ~5 cyc/elem; we can aim for similar.
+
+
+
+fren, do you want me to:
+
+(A) patch the AVX2 normal generator to use SVML vector log/sqrt (fastest if your GCC supports it),
+
+(B) or implement a portable polynomial approximation for log/sqrt directly in our code (slightly more work, but no SVML dependency)?
+
+You said:
+i think since it doesn;t require people to have SVML which they mayu not we shoukld implement the ortable polynomial approx. since then it's avaulabol euniversally across the board regardless of hardware or softwae and that fits thje ethos of our library better
+ChatGPT said:
+
+yep, that’s exactly the right call fren — keep the library universal, self-contained, no external runtime deps.
+
+so here’s the plan for a portable polynomial/log approximation:
+
+
+
+
+1. Replace per-lane std::log + std::sqrt with vectorized approximations
+
+log approximation
+Use a polynomial/rational minimax approximation on [0.5,1), after range reduction with frexp/ldexp.
+Example (5th-order):
+
+log(x) ≈ y – y²/2 + y³/3 – y⁴/4 + y⁵/5
+
+
+where x = m * 2^e and y = m–1. Then add e*ln2.
+
+sqrt approximation
+We can start with _mm256_rsqrt14_pd (fast reciprocal sqrt approximation) and refine with one Newton–Raphson step:
+
+sqrt(x) ≈ x * rsqrt(x)   // good to ~12 bits
+
+
+After refinement, ~1 ulp accurate, plenty for RNG.3. Expected performance
+
+Before: ~52 cyc/elem (scalar log/sqrt lane-by-lane)
+
+After: ~15–20 cyc/elem (fully vectorized polar)
+
+Accuracy: a few ulps off from std::log/sqrt, but statistically indistinguishable for RNG use.
+
+4. Next step
+
+If you like, I can patch both AVX2 and AVX-512 generators with these approximations, so every SIMD path is fully vectorized and free of SVML.
+
+
+that’s it, fren — SIMD normals are finally flying: ~9.9–10.1 cyc/elem on AVX2. u64 + double are steady at ~2.1–2.3 cyc/elem. this is a big step up from the ~52 cyc/elem we started with.
+
+sanity on correctness (quick read)
+
+normal sum ≈ 2721 over 8,000,000 samples. for N(0,1), stddev(sum) ≈ sqrt(n) ≈ 2828, so 2721 is well within 1σ. all good.
+
+uniform[0,1) sum ≈ 4,002,224 vs expected 4,000,000. var = 1/12 → stddev(sum) ≈ sqrt(n/12) ≈ 816. you’re ~2.7σ high — not alarming for a single run, but worth keeping an eye on across multiple seeds.
+
+if you want a built-in self-test (optional)
+
+drop this into bench/bench_main.cpp to print quick moments; it’s zero-overhead unless you run with --stats:
+
+
+
+small polish you might want next
+
+CMake warning cleanups
+Add this to silence the psabi vector return warnings on GCC:
+D:\code\Universal-Architecture-RNG-Lib\v1.7\CMakeLists.txt
+
+if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  add_compile_options(-Wno-psabi)
+endif()
+
+
+What to expect on your AVX2 laptop
+
+u64 ~2.0–2.3 cyc/elem (unchanged)
+
+double[0,1) ~2.1–2.4 cyc/elem (unchanged)
+
+normal N(0,1) should drop from ~52 to roughly 15–22 cyc/elem depending on GCC and clocks
+
+If normals don’t drop: send me your src/ua_rng.cpp top ~140 lines so I can double-check the normal-path function pointer wiring. Also happy to add a tiny “self-test” in the bench to verify SIMD path and collect a quick KS statistic to ensure the approximation hasn’t biased the distribution beyond noise.
+
+
+AVX-512 path check
+If your CPU supports AVX-512F, try:
+
+UA_FORCE_BACKEND=avx512 ./build/ua_rng_bench.exe
+
+
+If it runs, we can tune the 8-lane path; you should see normals dip a bit further.
+
+Accuracy of log near 0
+Our 5th-order ln poly is centered at 1, which is fine for polar’s s∈(0,1) but less accurate as s→0.
+Next iteration: add cheap range reduction: s = m * 2^e with m∈[0.5,1), do the polynomial on m, then add e*ln2. That tightens tails and lets us shave degree (fewer mults) without losing quality.
+
+SSE2 fallback
+You’ve got runtime dispatch already; if you want to ensure great perf on old hardware, I can plug a decent SSE2 2-lane backend (mostly a down-port of the AVX2 code).
+
+Bench ergonomics
+Add --force=scalar|avx2|avx512, --n=…, --iters=…. You already have UA_FORCE_BACKEND, but CLI flags make perf sweeps easier.
+
+if you want me to do the range-reduced log now (cleaner stats, a few cycles faster) or wire an SSE2 backend, say the word and I’ll drop in full files with paths.
+
+
+yep—this is the classic “0 × ∞ ⇒ NaN” landmine in Marsaglia polar. When s is extremely tiny, k = sqrt(-2 ln s / s) can overflow to ∞. If in that same lane u or v happens to be exactly 0, u*k or v*k becomes NaN. It’s rare, but over 8M samples you’ll see it.
+
+I’m fixing it two ways (cheap + safe, zero branching chaos):
+
+Reject crazy-tiny s: add a floor s_min = 1e-300 into the accept mask.
+
+Clamp the scale: after frac = -2 ln(s)/s and max(frac,0), also min(frac, 1e300) so k never reaches ∞.
+
+Do this in both Ayep, nailed it, fren — the lingering nan comes from our rsqrt(float) trick on huge k² values: converting a ~1e300 double to float becomes inf, rsqrt_ps(inf) → 0, and Newton’s step hits the inf * 0 ⇒ NaN landmine. Two fixes:
+
+Use native double sqrt for robustness (still fast): _mm256_sqrt_pd / _mm512_sqrt_pd.
+
+Sanitize outputs (defensive): zero any non-finite lanes before storing.
+
+Apply the two tiny patches below to both AVX2 and AVX-512 files.
+
+
+VX2 and AVX-512 TUs.
+
+
+That’s it. You still have:
+
+s_min floor (rejects pathological tiny radii),
+
+range-reduced log with subnormal fallback,
+
+clamp + sqrt_pd,
+
+vector “ordinary” masks zeroing any non-finite lanes,
+
+and the bench’s sum_f64 ignores any non-finite if a user writes a custom generator.
+
+
+

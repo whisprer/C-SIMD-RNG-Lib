@@ -47,11 +47,9 @@ struct Xoshiro256ssScalar {
     }
   }
 
-  // Marsaglia Polar for normals (scalar)
   void generate_normal(double* out, std::size_t n) noexcept {
     std::size_t i = 0;
     while (i < n) {
-      // u,v in (-1,1)
       double u = 2.0 * next_uniform() - 1.0;
       double v = 2.0 * next_uniform() - 1.0;
       double s = u*u + v*v;
@@ -63,7 +61,6 @@ struct Xoshiro256ssScalar {
   }
 
   void jump() noexcept {
-    // 2^128 jump constants from xoshiro256** reference
     static constexpr std::uint64_t J[] = {
       0x180ec6d33cfd0abaULL, 0xd5a61266f0c9392cULL,
       0xa9582618e03fc9aaULL, 0x39abdc4529b1661cULL
@@ -71,9 +68,7 @@ struct Xoshiro256ssScalar {
     std::uint64_t s0n=0, s1n=0, s2n=0, s3n=0;
     for (int i = 0; i < 4; ++i) {
       for (int b = 0; b < 64; ++b) {
-        if (J[i] & (1ull << b)) {
-          s0n ^= s0; s1n ^= s1; s2n ^= s2; s3n ^= s3;
-        }
+        if (J[i] & (1ull << b)) { s0n ^= s0; s1n ^= s1; s2n ^= s2; s3n ^= s3; }
         (void)next_u64();
       }
     }
@@ -88,3 +83,4 @@ private:
 };
 
 } // namespace ua::detail
+

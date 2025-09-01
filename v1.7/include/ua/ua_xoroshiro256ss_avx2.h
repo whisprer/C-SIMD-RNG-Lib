@@ -1,102 +1,116 @@
-// v1.6.1/include/ua/ua_xoshiro256ss_avx2.h
 #pragma once
-#include <cstdint>
-#include <cstddef>
 #include <immintrin.h>
-#include "ua_platform.h"
+#include <cstddef>
+#include <cstdint>
 
-namespace ua {
+namespace ua::detail {
 
-struct Xoshiro256ssAVX2 {
-  __m256i s0, s1, s2, s3;
+struct Xoshiro256ssAVX512 {
+  __m512i s0, s1, s2, s3;
 
-  static UA_FORCE_INLINE __m256i rotl64(__m256i x, int k) noexcept {
-    __m256i l = _mm256_slli_epi64(x, k);
-    __m256i r = _mm256_srli_epi64(x, 64 - k);
-    return _mm256_or_si256(l, r);
-  }
-  static UA_FORCE_INLINE __m256i mul_by_5(__m256i x) noexcept {
-    __m256i x4 = _mm256_slli_epi64(x, 2);
-    return _mm256_add_epi64(x4, x);
-  }
-  static UA_FORCE_INLINE __m256i mul_by_9(__m256i x) noexcept {
-    __m256i x8 = _mm256_slli_epi64(x, 3);
-    return _mm256_add_epi64(x8, x);
+  static inline __m512i rotl64(__m512i x, int k) noexcept {
+    return _mm512_ternarylogic_epi64(_mm512_slli_epi64(x, k), _mm512_srli_epi64(x, 64 - k), _mm512_setzero_si512(), 0xF8);
   }
 
-  static uint64_t splitmix64_scalar(uint64_t& x) {
-    x += 0x9e3779b97f4a7c15ULL;
-    uint64_t z = x;
-    z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9ULL;
-    z = (z ^ (z >> 27)) * 0x94d049bb133111ebULL;
-    return z ^ (z >> 31);
+  static inline __m512i mullo64(__m512i a, std::uint64_t c) noexcept {
+    return _mm512_mullo_epi64(a, _mm512_set1_epi64((long long)c));
   }
 
-  explicit Xoshiro256ssAVX2(uint64_t seed) {
-    uint64_t z = seed;
-    uint64_t a0 = splitmix64_scalar(z);
-    uint64_t a1 = splitmix64_scalar(z);
-    uint64_t a2 = splitmix64_scalar(z);
-    uint64_t a3 = splitmix64_scalar(z);
-    uint64_t b0 = splitmix64_scalar(z);
-    uint64_t b1 = splitmix64_scalar(z);
-    uint64_t b2 = splitmix64_scalar(z);
-    uint64_t b3 = splitmix64_scalar(z);
-
-    s0 = _mm256_set_epi64x(a3, a2, a1, a0);
-    s1 = _mm256_set_epi64x(b3, b2, b1, b0);
-    s2 = _mm256_set_epi64x(splitmix64_scalar(z), splitmix64_scalar(z), splitmix64_scalar(z), splitmix64_scalar(z));
-    s3 = _mm256_set_epi64x(splitmix64_scalar(z), splitmix64_scalar(z), splitmix64_scalar(z), splitmix64_scalar(z));
+  explicit Xoshiro256ssAVX512(std::uint64_t seed) noexcept {
+    std::uint64_t x = seed;
+    auto sm64 = [](std::uint64_t& v) {
+      v += 0x9e3779b97f4a7c15ull;
+      std::uint64_t z = v;
+      z = (z ^ (z >> 30)) * 0xbf58476d1ce4e5b9ull;
+      z = (z ^ (z >> 27)) * 0x94d049bb133111ebull;
+      return z ^ (z >> 31);
+    };
+    alignas(64) std::uint64_t tmp[32];
+    for (int lane = 0; lane < 8; ++lane) {
+      tmp[lane + 0]  = sm64(x);
+      tmp[lane + 8]  = sm64(x);
+      tmp[lane + 16] = sm64(x);
+      tmp[lane + 24] = sm64(x);
+    }
+    s0 = _mm512_set_epi64(tmp[24],tmp[16],tmp[8],tmp[0], tmp[25],tmp[17],tmp[9],tmp[1]);
+    s1 = _mm512_set_epi64(tmp[26],tmp[18],tmp[10],tmp[2], tmp[27],tmp[19],tmp[11],tmp[3]);
+    s2 = _mm512_set_epi64(tmp[28],tmp[20],tmp[12],tmp[4], tmp[29],tmp[21],tmp[13],tmp[5]);
+    s3 = _mm512_set_epi64(tmp[30],tmp[22],tmp[14],tmp[6], tmp[31],tmp[23],tmp[15],tmp[7]);
   }
 
-  UA_FORCE_INLINE __m256i next_vec_u64() noexcept {
-    __m256i res = mul_by_9(rotl64(mul_by_5(s1), 7));
-
-    __m256i t = _mm256_slli_epi64(s1, 17);
-
-    s2 = _mm256_xor_si256(s2, s0);
-    s3 = _mm256_xor_si256(s3, s1);
-    s1 = _mm256_xor_si256(s1, s2);
-    s0 = _mm256_xor_si256(s0, s3);
-    s2 = _mm256_xor_si256(s2, t);
+  inline __m512i next_u64_vec() noexcept {
+    __m512i t1 = mullo64(s1, 5u);
+    __m512i res = mullo64(rotl64(t1, 7), 9u);
+    __m512i t = _mm512_slli_epi64(s1, 17);
+    s2 = _mm512_xor_si512(s2, s0);
+    s3 = _mm512_xor_si512(s3, s1);
+    s1 = _mm512_xor_si512(s1, s2);
+    s0 = _mm512_xor_si512(s0, s3);
+    s2 = _mm512_xor_si512(s2, t);
     s3 = rotl64(s3, 45);
-
     return res;
   }
 
-  void generate_u64(uint64_t* out, size_t n) noexcept {
-    size_t i = 0;
-    for (; i + 4 <= n; i += 4) {
-      __m256i v = next_vec_u64();
-      _mm256_storeu_si256(reinterpret_cast<__m256i*>(out + i), v);
+  inline void generate_u64(std::uint64_t* out, std::size_t n) noexcept {
+    std::size_t i = 0;
+    while (i + 8 <= n) {
+      __m512i v = next_u64_vec();
+      _mm512_storeu_si512(reinterpret_cast<void*>(out + i), v);
+      i += 8;
     }
     if (i < n) {
-      __m256i v = next_vec_u64();
-      alignas(32) uint64_t tmp[4];
-      _mm256_store_si256(reinterpret_cast<__m256i*>(tmp), v);
-      for (; i < n; ++i) out[i] = tmp[i & 3];
+      alignas(64) std::uint64_t tmp[8];
+      _mm512_store_si512(reinterpret_cast<void*>(tmp), next_u64_vec());
+      for (; i < n; ++i) out[i] = tmp[i & 7];
     }
   }
 
-  void generate_double(double* out, size_t n) noexcept {
-    constexpr double inv = 1.0 / static_cast<double>(1ULL << 53);
-    size_t i = 0;
-    for (; i + 4 <= n; i += 4) {
-      __m256i v = next_vec_u64();
-      alignas(32) uint64_t tmp[4];
-      _mm256_store_si256(reinterpret_cast<__m256i*>(tmp), v);
-      out[i+0] = static_cast<double>(tmp[0] >> 11) * inv;
-      out[i+1] = static_cast<double>(tmp[1] >> 11) * inv;
-      out[i+2] = static_cast<double>(tmp[2] >> 11) * inv;
-      out[i+3] = static_cast<double>(tmp[3] >> 11) * inv;
+  inline void generate_double(double* out, std::size_t n) noexcept {
+    constexpr std::uint64_t EXP = 0x3FFull << 52;
+    std::size_t i = 0;
+    while (i + 8 <= n) {
+      __m512i u = _mm512_srli_epi64(next_u64_vec(), 12);
+      __m512i bits = _mm512_or_epi64(u, _mm512_set1_epi64((long long)EXP));
+      __m512d d = _mm512_sub_pd(_mm512_castsi512_pd(bits), _mm512_set1_pd(1.0));
+      _mm512_storeu_pd(out + i, d);
+      i += 8;
     }
-    for (; i < n; ++i) {
-      alignas(32) uint64_t tmp[4];
-      __m256i v = next_vec_u64();
-      _mm256_store_si256(reinterpret_cast<__m256i*>(tmp), v);
-      out[i] = static_cast<double>(tmp[i & 3] >> 11) * inv;
+    if (i < n) {
+      alignas(64) double tmp[8];
+      __m512i u = _mm512_srli_epi64(next_u64_vec(), 12);
+      __m512i bits = _mm512_or_epi64(u, _mm512_set1_epi64((long long)EXP));
+      __m512d d = _mm512_sub_pd(_mm512_castsi512_pd(bits), _mm512_set1_pd(1.0));
+      _mm512_store_pd(tmp, d);
+      for (; i < n; ++i) out[i] = tmp[i & 7];
     }
+  }
+
+  // normals omitted for brevity here; AVX2 path covers the fast vector case well on most hosts.
+  inline void generate_normal(double* out, std::size_t n) noexcept {
+    // fall back to scalar-ish finish using generate_double
+    std::size_t i = 0;
+    while (i < n) {
+      double u, v, s;
+      do {
+        u = 2.0 * uniform_scalar() - 1.0;
+        v = 2.0 * uniform_scalar() - 1.0;
+        s = u*u + v*v;
+      } while (s == 0.0 || s >= 1.0);
+      double k = std::sqrt(-2.0 * std::log(s) / s);
+      out[i++] = u * k;
+      if (i < n) out[i++] = v * k;
+    }
+  }
+
+  inline double uniform_scalar() noexcept {
+    constexpr std::uint64_t EXP = 0x3FFull << 52;
+    alignas(64) std::uint64_t tmp[8];
+    _mm512_store_si512(reinterpret_cast<void*>(tmp), _mm512_srli_epi64(next_u64_vec(), 12));
+    std::uint64_t bits = tmp[0] | EXP;
+    double d;
+    std::memcpy(&d, &bits, sizeof(d));
+    return d - 1.0;
   }
 };
 
-} // namespace ua
+} // namespace ua::detail

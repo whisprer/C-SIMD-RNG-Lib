@@ -1,18 +1,165 @@
 cmake_minimum_required(VERSION 3.20)
-project(ua_rng LANGUAGES CXX)
+
+project(ua_rng
+  VERSION 1.7.0
+  DESCRIPTION "Universal Architecture RNG Library (fast SIMD xoshiro256** w/ runtime dispatch)"
+  LANGUAGES CXX)
+
+# ===================== options =====================
+option(UA_ENABLE_AVX2     "Build AVX2 backend TU"            ON)
+option(UA_ENABLE_AVX512   "Build AVX-512F backend TU"        ON)
+option(UA_STREAM_STORES   "Use streaming stores when aligned" OFF)
+option(UA_BUILD_BENCH     "Build benchmark app"               ON)
+option(UA_ENABLE_LTO      "Enable link-time optimization"     ON)
+option(UA_BUILD_SHARED    "Build shared library variant"      ON)
+option(UA_BUILD_STATIC    "Build static library variant"      ON)
+
+if(NOT UA_BUILD_SHARED AND NOT UA_BUILD_STATIC)
+  set(UA_BUILD_STATIC ON)
+endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+# ===================== compile flags =====================
 if (MSVC)
-  add_compile_options(/O2)
+  add_compile_options(/O2 /DNOMINMAX /permissive- /Zc:__cplusplus)
 else()
-  add_compile_options(-O3 -fno-exceptions -fno-rtti -fno-omit-frame-pointer -march=native -mtune=native -flto)
+  add_compile_options(-O3 -fno-exceptions -fno-rtti -fno-omit-frame-pointer)
 endif()
 
-add_library(ua_rng INTERFACE)
-target_include_directories(ua_rng INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+if (UA_ENABLE_LTO)
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT LTO_OK OUTPUT LTO_MSG)
+  if (LTO_OK)
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+  endif()
+endif()
 
-add_executable(ua_rng_bench bench/bench_main.cpp)
-target_link_libraries(ua_rng_bench PRIVATE ua_rng)
+# ===================== sources =====================
+set(UA_PUBLIC_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
+set(UA_SOURCES
+  src/ua_cpuid.cpp
+  src/ua_rng.cpp
+)
+
+if (UA_ENABLE_AVX2)
+  list(APPEND UA_SOURCES src/xoshiro256ss_avx2.cpp)
+endif()
+
+if (UA_ENABLE_AVX512)
+  list(APPEND UA_SOURCES src/xoshiro256ss_avx512.cpp)
+endif()
+
+# ===================== library targets =====================
+set(_UA_COMPILE_DEFS $<$<BOOL:${UA_STREAM_STORES}>:UA_STREAM_STORES=1>)
+set(_UA_PUBLIC_INCLUDES ${UA_PUBLIC_INCLUDE_DIR})
+
+function(_ua_common_props tgt)
+  target_include_directories(${tgt} PUBLIC ${_UA_PUBLIC_INCLUDES})
+  target_compile_definitions(${tgt} PUBLIC ${_UA_COMPILE_DEFS})
+  if (UA_ENABLE_AVX2)
+    target_compile_definitions(${tgt} PRIVATE UA_BUILD_WITH_AVX2=1)
+  endif()
+  if (UA_ENABLE_AVX512)
+    target_compile_definitions(${tgt} PRIVATE UA_BUILD_WITH_AVX512=1)
+  endif()
+  if (MSVC)
+    # compile AVX TUs with proper /arch
+    if (UA_ENABLE_AVX2)
+      set_source_files_properties(src/xoshiro256ss_avx2.cpp PROPERTIES COMPILE_FLAGS "/arch:AVX2")
+    endif()
+    if (UA_ENABLE_AVX512)
+      set_source_files_properties(src/xoshiro256ss_avx512.cpp PROPERTIES COMPILE_FLAGS "/arch:AVX512")
+    endif()
+  else()
+    if (UA_ENABLE_AVX2)
+      set_source_files_properties(src/xoshiro256ss_avx2.cpp PROPERTIES COMPILE_FLAGS "-mavx2 -mfma")
+    endif()
+    if (UA_ENABLE_AVX512)
+      set_source_files_properties(src/xoshiro256ss_avx512.cpp PROPERTIES COMPILE_FLAGS "-mavx512f -mavx512dq -mavx512vl")
+    endif()
+  endif()
+endfunction()
+
+if (UA_BUILD_STATIC)
+  add_library(ua_rng STATIC ${UA_SOURCES})
+  set_target_properties(ua_rng PROPERTIES OUTPUT_NAME "ua_rng")
+  _ua_common_props(ua_rng)
+endif()
+
+if (UA_BUILD_SHARED)
+  add_library(ua_rng_shared SHARED ${UA_SOURCES})
+  set_target_properties(ua_rng_shared PROPERTIES OUTPUT_NAME "ua_rng")
+  # easy Windows symbol exports without decorating headers
+  if (WIN32 AND NOT MSVC)
+    # MinGW
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+  elseif (WIN32 AND MSVC)
+    set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+  endif()
+  _ua_common_props(ua_rng_shared)
+endif()
+
+# ===================== bench =====================
+if (UA_BUILD_BENCH)
+  add_executable(ua_rng_bench bench/bench_main.cpp)
+  if (UA_BUILD_STATIC)
+    target_link_libraries(ua_rng_bench PRIVATE ua_rng)
+  else()
+    target_link_libraries(ua_rng_bench PRIVATE ua_rng_shared)
+  endif()
+  if (MSVC)
+    target_compile_options(ua_rng_bench PRIVATE /arch:AVX2)
+  else()
+    target_compile_options(ua_rng_bench PRIVATE -march=native -mtune=native)
+  endif()
+  target_include_directories(ua_rng_bench PRIVATE ${_UA_PUBLIC_INCLUDES})
+endif()
+
+# ===================== install & package config =====================
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+
+set(UA_INSTALL_CMAKEDIR ${CMAKE_INSTALL_LIBDIR}/cmake/ua_rng)
+
+if (UA_BUILD_STATIC)
+  install(TARGETS ua_rng
+    EXPORT ua_rngTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+if (UA_BUILD_SHARED)
+  install(TARGETS ua_rng_shared
+    EXPORT ua_rngTargets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+endif()
+
+install(DIRECTORY include/ua DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+# Export targets file
+install(EXPORT ua_rngTargets
+  NAMESPACE ua::
+  FILE ua_rngTargets.cmake
+  DESTINATION ${UA_INSTALL_CMAKEDIR})
+
+# Config + Version files
+configure_package_config_file(
+  ${PROJECT_SOURCE_DIR}/cmake/ua_rngConfig.cmake.in
+  ${PROJECT_BINARY_DIR}/ua_rngConfig.cmake
+  INSTALL_DESTINATION ${UA_INSTALL_CMAKEDIR})
+
+write_basic_package_version_file(
+  ${PROJECT_BINARY_DIR}/ua_rngConfigVersion.cmake
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY SameMajorVersion)
+
+install(FILES
+  ${PROJECT_BINARY_DIR}/ua_rngConfig.cmake
+  ${PROJECT_BINARY_DIR}/ua_rngConfigVersion.cmake
+  DESTINATION ${UA_INSTALL_CMAKEDIR})

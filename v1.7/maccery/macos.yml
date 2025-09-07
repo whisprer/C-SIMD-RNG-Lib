@@ -1,0 +1,59 @@
+name: macOS builds
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  macos-universal:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure (x86_64)
+        run: |
+          cmake -S . -B build-x64 -G "Ninja" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$PWD/dist-macos-x64" \
+            -DUA_BUILD_SHARED=ON -DUA_BUILD_STATIC=ON \
+            -DUA_ENABLE_AVX2=ON -DUA_ENABLE_AVX512=ON
+      - name: Build + Install (x86_64)
+        run: |
+          cmake --build build-x64 -j
+          cmake --install build-x64
+
+      - name: Configure (arm64)
+        run: |
+          cmake -S . -B build-arm64 -G "Ninja" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX="$PWD/dist-macos-arm64" \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 \
+            -DUA_BUILD_SHARED=ON -DUA_BUILD_STATIC=ON \
+            -DUA_ENABLE_AVX2=ON -DUA_ENABLE_AVX512=ON
+      - name: Build + Install (arm64)
+        run: |
+          cmake --build build-arm64 -j
+          cmake --install build-arm64
+
+      - name: Create universal (merge arm64+x64)
+        run: |
+          mkdir -p dist-macos-universal/lib dist-macos-universal/include dist-macos-universal/pkgconfig
+          cp -R dist-macos-x64/include dist-macos-universal/
+          # Merge static + shared with lipo
+          lipo -create -output dist-macos-universal/lib/libua_rng.a \
+            dist-macos-x64/lib/libua_rng.a dist-macos-arm64/lib/libua_rng.a
+          lipo -create -output dist-macos-universal/lib/libua_rng.dylib \
+            dist-macos-x64/lib/libua_rng.dylib dist-macos-arm64/lib/libua_rng.dylib
+          # If your CMake generates ua_rng.pc, merge a single copy:
+          if [ -f dist-macos-x64/lib/pkgconfig/ua_rng.pc ]; then
+            mkdir -p dist-macos-universal/lib/pkgconfig
+            cp dist-macos-x64/lib/pkgconfig/ua_rng.pc dist-macos-universal/lib/pkgconfig/
+          fi
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ua_rng-macos-universal
+          path: |
+            dist-macos-universal/**

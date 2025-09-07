@@ -1,0 +1,65 @@
+#include <stdint.h>
+#include <cuda_runtime.h>
+
+extern "C" {
+
+__device__ __forceinline__ uint32_t mulhi_u32(uint32_t a, uint32_t b) {
+  return __umulhi(a,b);
+}
+
+__device__ __forceinline__ void philox4x32_round(uint32_t& c0,uint32_t& c1,uint32_t& c2,uint32_t& c3,
+                                                 uint32_t& k0,uint32_t& k1) {
+  const uint32_t M0=0xD2511F53u, M1=0xCD9E8D57u;
+  const uint32_t W0=0x9E3779B9u, W1=0xBB67AE85u;
+
+  uint32_t lo0 = c0 * M0;
+  uint32_t lo1 = c2 * M1;
+  uint32_t hi0 = mulhi_u32(c0, M0);
+  uint32_t hi1 = mulhi_u32(c2, M1);
+
+  uint32_t r0 = hi1 ^ c1 ^ k0;
+  uint32_t r1 = lo1;
+  uint32_t r2 = hi0 ^ c3 ^ k1;
+  uint32_t r3 = lo0;
+
+  c0=r0; c1=r1; c2=r2; c3=r3;
+  k0 += W0; k1 += W1;
+}
+
+__global__ void ua_cuda_philox_kernel(uint64_t seed, uint64_t* out, size_t n) {
+  size_t gid = blockIdx.x * blockDim.x + threadIdx.x;
+  size_t stride = gridDim.x * blockDim.x;
+
+  // derive key from seed (very simple)
+  uint32_t k0 = (uint32_t)(seed ^ 0x9E3779B97F4A7C15ull);
+  uint32_t k1 = (uint32_t)((seed>>32) ^ 0xBB67AE8584CAA73Bull);
+
+  for (size_t idx = gid; idx < n; idx += stride) {
+    // 128-bit counter: lane = idx
+    uint32_t c0 = (uint32_t)(idx);
+    uint32_t c1 = 0, c2 = 0, c3 = 0;
+    uint32_t kk0=k0, kk1=k1;
+
+    #pragma unroll
+    for (int i=0;i<10;++i) philox4x32_round(c0,c1,c2,c3,kk0,kk1);
+
+    // stitch pairs into u64s
+    uint64_t a = (uint64_t(c0)<<32) | uint64_t(c1);
+    out[idx] = a;
+  }
+}
+
+// host API
+int ua_cuda_philox_generate_u64(uint64_t seed, uint64_t* host_out, size_t n) {
+  uint64_t* dptr = nullptr;
+  cudaError_t e = cudaMalloc(&dptr, n*sizeof(uint64_t));
+  if (e != cudaSuccess) return -1;
+  int block = 256;
+  int grid  = (int)((n + block - 1)/block);
+  ua_cuda_philox_kernel<<<grid, block>>>(seed, dptr, n);
+  e = cudaMemcpy(host_out, dptr, n*sizeof(uint64_t), cudaMemcpyDeviceToHost);
+  cudaFree(dptr);
+  return (e==cudaSuccess) ? 0 : -2;
+}
+
+} // extern "C"

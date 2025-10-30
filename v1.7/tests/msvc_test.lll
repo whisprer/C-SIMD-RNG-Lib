@@ -1,0 +1,17 @@
+#include <cstdio>
+#include <cstdint>
+#include "ua/ua_rng.h"
+
+int main() {
+    ua::Rng rng(123456789ull);
+
+    std::uint64_t x = 0;
+    rng.u64(&x, 1);
+    std::printf("one u64: 0x%016llx\n", (unsigned long long)x);
+
+    double d = 0.0;
+    rng.uniform(&d, 1);
+    std::printf("one uniform[0,1): %.17g\n", d);
+
+    return 0;
+}

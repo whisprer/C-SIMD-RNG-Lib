@@ -1,0 +1,3 @@
+# ua_rngConfig.cmake - package config for ua_rng
+@PACKAGE_INIT@
+include("${CMAKE_CURRENT_LIST_DIR}/ua_rngTargets.cmake")

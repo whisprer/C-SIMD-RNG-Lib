@@ -1,0 +1,10 @@
+^D:\CODE\C-SIMD-RNG-LIB\V1.6\BUILD\CMAKEFILES\E19CDC81EAA6270CA0DD2B6FE53204CD\GENERATE.STAMP.RULE
+setlocal
+"C:\Program Files\Microsoft Visual Studio\2022\Community\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -SD:/code/C-SIMD-RNG-Lib/v1.6 -BD:/code/C-SIMD-RNG-Lib/v1.6/build --check-stamp-list CMakeFiles/generate.stamp.list --vs-solution-file D:/code/C-SIMD-RNG-Lib/v1.6/build/universal_rng.sln
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd

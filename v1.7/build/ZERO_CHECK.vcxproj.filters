@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="17.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <CustomBuild Include="D:\code\C-SIMD-RNG-Lib\v1.7\build\CMakeFiles\45b5485b6e7052cebc64cec1ab6d5f3b\generate.stamp.rule">
+      <Filter>CMake Rules</Filter>
+    </CustomBuild>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="CMake Rules">
+      <UniqueIdentifier>{4022AE5D-D458-38F5-8AE5-2742B317C030}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

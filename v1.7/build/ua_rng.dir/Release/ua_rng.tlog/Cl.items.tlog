@@ -1,0 +1,4 @@
+D:\code\C-SIMD-RNG-Lib\v1.7\src\ua_cpuid.cpp;D:\code\C-SIMD-RNG-Lib\v1.7\build\ua_rng.dir\Release\ua_cpuid.obj
+D:\code\C-SIMD-RNG-Lib\v1.7\src\ua_rng.cpp;D:\code\C-SIMD-RNG-Lib\v1.7\build\ua_rng.dir\Release\ua_rng.obj
+D:\code\C-SIMD-RNG-Lib\v1.7\src\xoshiro256ss_avx2.cpp;D:\code\C-SIMD-RNG-Lib\v1.7\build\ua_rng.dir\Release\xoshiro256ss_avx2.obj
+D:\code\C-SIMD-RNG-Lib\v1.7\src\xoshiro256ss_avx512.cpp;D:\code\C-SIMD-RNG-Lib\v1.7\build\ua_rng.dir\Release\xoshiro256ss_avx512.obj
